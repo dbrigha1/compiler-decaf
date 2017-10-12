@@ -32,35 +32,39 @@ UNKNOWN     .
 %%
 
 "//"                                      {yyless(0); BEGIN(COMMENT);}
-<COMMENT>[^\n]+                           {return 11;} 
-<COMMENT>[\n]                             {BEGIN(INITIAL); return 8;}
+<COMMENT>[^\n]+                           {;} 
+<COMMENT>[\n]                             {BEGIN(INITIAL);}
 
 
-"/*"                                     {BEGIN(BLOCK_COMMENT); yyless(0); return 11;}
-<BLOCK_COMMENT>[\n]                      {Token::_column = 0; return 11; }
-<BLOCK_COMMENT>"*/"                      {BEGIN(INITIAL); return 11;}
-<BLOCK_COMMENT>.                         {return 11;}
+"/*"                                     {BEGIN(BLOCK_COMMENT); yyless(0);}
+<BLOCK_COMMENT>[\n]                      {Token::_column = 0;}
+<BLOCK_COMMENT>"*/"                      {BEGIN(INITIAL);}
+<BLOCK_COMMENT>.                         {;}
 
 
-<ERROR>{UNKNOWN}{OPERATOR}|{UNKNOWN}{SPACE}|{UNKNOWN}{TAB}|{UNKNOWN} {BEGIN(INITIAL); yyless(1); return 9;}
-<ERROR>{UNKNOWN}{IDENTIFIER}*                                            {BEGIN(ERROR_WORD); return 99;}
-<ERROR_WORD>{PUNCTUATION}|{OPERATOR}|{SPACE}|{TAB}|{NEWLINE}         {BEGIN(INITIAL); yyless(0);}
+<ERROR>{UNKNOWN}{OPERATOR}|{UNKNOWN}{SPACE}|{UNKNOWN}{TAB}|{UNKNOWN} {BEGIN(INITIAL); yyless(1); return SINGLE_ERROR;}
+
+<ERROR>{UNKNOWN}{IDENTIFIER}*                                        {BEGIN(ERROR_WORD); return WORD_ERROR;}
+
+ /*<ERROR_WORD>{PUNCTUATION}|{OPERATOR}|{SPACE}|{TAB}|{NEWLINE}
+ * {BEGIN(INITIAL); yyless(0);} */
+<ERROR_WORD>[^{IDENTIFIER}]         {BEGIN(INITIAL); yyless(0);}
 
 
-{SPACE}       {return 10;} 
-{TAB}         {return 1;}
-{PUNCTUATION} {return 2;}
-{RELATIONOP}  {return 15;}
-{SUMOP}       {return 12;}
-{PRODUCTOP}   {return 13;}
-{UNARYOP}     {return 14;}
-{OPERATOR}    {return 3;}
-{INTEGER}     {return 4;}
-{FLOAT}       {return 5;}
-{SCIENTIFIC}  {return 6;}
-{KEYWORD}     {return 16;}
-{IDENTIFIER}  {return 7;}
-{NEWLINE}     {return 8;}
+{SPACE}       {Token::_column++;} 
+{TAB}         {Token::_column++;}
+{PUNCTUATION} {return PUNCTUATION;}
+{RELATIONOP}  {return RELATIONOP;}
+{SUMOP}       {return SUMOP;}
+{PRODUCTOP}   {return PRODUCTOP;}
+{UNARYOP}     {return UNARYOP;}
+{OPERATOR}    {return OPERATOR;}
+{INTEGER}     {return INTEGER;}
+{FLOAT}       {return FLOAT;}
+{SCIENTIFIC}  {return SCIENTIFIC;}
+{KEYWORD}     {return KEYWORD;}
+{IDENTIFIER}  {return IDENTIFIER;}
+{NEWLINE}     {Token::_column = 1;}
 {UNKNOWN}     {BEGIN(ERROR); yyless(0);}
 
 %%

@@ -5,8 +5,21 @@
 
 #include<string>
 #include<iomanip>
-
-
+#define PUNCTUATION 1
+#define RELATIONOP 2
+#define SUMOP 3
+#define PRODUCTOP 4
+#define UNARYOP 5
+#define OPERATOR 6
+#define INTEGER 7
+#define FLOAT 8
+#define SCIENTIFIC 9
+#define KEYWORD 10
+#define IDENTIFIER 11
+#define NEWLINE 12
+#define UNKNOWN 99
+#define SINGLE_ERROR 100
+#define WORD_ERROR 101
 class Token {
 
 private:
@@ -68,68 +81,60 @@ public:
   {
     switch(type)
     {
-      case 10: 
-	_value = "SPACE";
-	break;
-     
-      case 1: 
-	_value = "TAB";
-	break;
-   
-      case 2: 
+      case PUNCTUATION: 
 	_value = "PUNCTUATION";
 	break;
 
-      case 3: 
-	_value = "OPERATOR";
-	break;
-
-      case 4: 
-	_value = "INTEGER";
-	break;
-
-      case 5: 
-	_value = "FLOAT";
-	break;
-
-      case 6: 
-	_value = "SCIENTIFIC";
-	break;
-
-      case 7: 
-	_value = "IDENTIFIER";
-	break;
-
-      case 8: 
-	_value = "NEWLINE";
-	break;
-
-      case 9:
-	_value = "SINGLE ERROR";
-	break;
-
-      case 99:
-	_value = "WORD ERROR";
-	break;
-
-      case 15:
+      case RELATIONOP: 
 	_value = "RELATIONOP";
 	break;
 
-      case 12:
+      case SUMOP: 
 	_value = "SUMOP";
 	break;
 
-      case 13:
+      case PRODUCTOP: 
 	_value = "PRODUCTOP";
 	break;
 
-      case 14:
+      case UNARYOP: 
 	_value = "UNARYOP";
 	break;
 
-      case 16:
+      case OPERATOR: 
+	_value = "OPERATOR";
+	break;
+
+      case INTEGER: 
+	_value = "INTEGER";
+	break;
+
+      case FLOAT:
+	_value = "FLOAT";
+	break;
+
+      case SCIENTIFIC:
+	_value = "SCIENTIFIC";
+	break;
+
+      case KEYWORD:
 	_value = "KEYWORD";
+	break;
+
+      case IDENTIFIER:
+	_value = "IDENTIFIER";
+	break;
+
+      case UNKNOWN:
+	_value = "UNKNOWN";
+	break;
+
+      case SINGLE_ERROR:
+	_value = "SINGLE ERROR";
+	break;
+
+      case WORD_ERROR:
+	_value = "WORD ERROR";
 	break;
 
       default:
@@ -146,11 +151,11 @@ public:
 
   void  print()
   {
-    if(_type == 8 || _type == 0 || _type == 1)
+/*    if(_type == 8 || _type == 0 || _type == 1)
     {
       _token = "";
     }
-
+*/
      std::cout << " " << std::setw(10) << std::left << _line
                << " " << std::setw(10) << std::left << _column
                << " " << std::setw(20) << std::left << _token

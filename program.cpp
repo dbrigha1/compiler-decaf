@@ -17,7 +17,6 @@ int main()
 {
   yyFlexLexer myScanner;
   int rtn;
-  int previousLine;
   Token token;
   std::vector<Token> errorCatalog;
 
@@ -30,38 +29,28 @@ int main()
  
       while((rtn=myScanner.yylex()) != 0) 
            {		 
-                 token.setType(rtn);
-		 token.setValue(rtn);
-                 token.setLength(myScanner.YYLeng());
-		 token.setToken(myScanner.YYText());
-
-	 /*if an error, store error and exit program if errors greater than 20*/
-	     if(rtn == 9)	       {
-	         const Token error = token;
-	         errorCatalog.push_back(error);
-		 if(errorCatalog.size() > 20)
+                token.setType(rtn);
+	        token.setValue(rtn);
+                token.setLength(myScanner.YYLeng());
+	        token.setToken(myScanner.YYText());
+	        token.setLine(myScanner.lineno());
+	
+	     /*if an error, store error and exit program if errors greater than 20*/
+	     if(rtn == 9)
+      	     {
+	        const Token error = token;
+	        errorCatalog.push_back(error);
+	        if(errorCatalog.size() > 20)
 		 {
 		   std::cout << "Too Many Errors!" << std::endl;
 		   std::cout << "Ending Program..." << std::endl;
 		   exit(0);
 		 }
-	       }
-
-	     /*if not comment then print!*/
-	     if(rtn!=11)
-	     {
-               token.print();
 	     }
 
-             token.setColumn(myScanner.YYLeng());
-	     token.setLine(myScanner.lineno());
-	      
-             /*if token matches a newline then reset column to 1*/
-	     if(rtn ==8)
-	       {
-	         token.resetColumn();
-	       }
-	     token.clear();
+               token.print();
+               token.setColumn(myScanner.YYLeng());
+	       token.clear();
            }
 
       return 0;
