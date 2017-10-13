@@ -1,10 +1,19 @@
+CXX=g++
+CXXFLAGS=-ggdb -std=c++11 -Wall
+YACC=bison
+YFLAGS=--report=state -W -d
+LEX=flex
+LEXXX=flex++
+LFLAGS=--warn
 
-all: program.cpp program.h program_lex.cpp program.lpp
-	g++ -ggdb program_lex.cpp program.cpp
+all: program.tab.c program.tab.h program.cpp program.h program_lex.cpp node.hpp
+	$(CXX) $(CXXFLAGS) program_lex.cpp program.tab.c program.cpp -o program
 
-program_lex.cpp: program.lpp
-	flex++ --warn program.lpp
+program.tab.c: program.y node.hpp
+	$(YACC) $(YFLAGS) program.y
+
+program_lex.cpp: program.lpp program.h
+	$(LEXXX) $(LFLAGS) program.lpp
 
 clean:
-	rm -f *.o a.out core.* program_lex.cpp
-	
+	rm -f *.o a.out core.* program_lex.cpp program.tab.* program.output

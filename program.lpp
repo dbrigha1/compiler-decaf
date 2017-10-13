@@ -8,9 +8,18 @@ Dr. Buckner
 %option noyywrap
 %option yylineno
 %{
-#include "program.h"
+//#include "program.h"
+#include "node.hpp"
+#include "program.tab.h"
 #include <iostream>
+
+void yyerror(const char *string)
+{
+  std::cerr << string << endl;
+  return;
+}
 %}
+
 
 SPACE       [ ]+                                                              
 TAB         [\t]+                                                            
@@ -59,7 +68,7 @@ UNKNOWN     .
 {PRODUCTOP}   {return PRODUCTOP;}
 {UNARYOP}     {return UNARYOP;}
 {OPERATOR}    {return OPERATOR;}
-{INTEGER}     {return INTEGER;}
+{INTEGER}     {yylval.ttype = new Node; yylval.ttype->setval(atoi(yytext)); return INTEGER;}
 {FLOAT}       {return FLOAT;}
 {SCIENTIFIC}  {return SCIENTIFIC;}
 {KEYWORD}     {return KEYWORD;}

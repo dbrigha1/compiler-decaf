@@ -5,7 +5,7 @@
 
 #include<string>
 #include<iomanip>
-#define PUNCTUATION 1
+/*#define PUNCTUATION 1
 #define RELATIONOP 2
 #define SUMOP 3
 #define PRODUCTOP 4
@@ -20,6 +20,7 @@
 #define UNKNOWN 99
 #define SINGLE_ERROR 100
 #define WORD_ERROR 101
+*/
 class Token {
 
 private:
