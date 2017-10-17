@@ -51,7 +51,19 @@ void yyerror(const char *);
  *(in this case) it is ever assigned a value. See the rules.
  */
 %type<ttype> exp
+%token<ttype> SINGLE_ERROR
+%token<ttype> WORD_ERROR 
+%token<ttype> PUNCTUATION 
+%token<ttype> SUMOP
+%token<ttype> PRODUCTOP 
+%token<ttype> UNARYOP 
+%token<ttype> RELATIONOP 
+%token<ttype> OPERATOR 
 %token<ttype> INTEGER 
+%token<ttype> FLOAT 
+%token<ttype> SCIENTIFIC 
+%token<ttype> IDENTIFIER 
+%token<ttype> KEYWORD 
 %token RPAREN LPAREN
 %left PLUS MINUS    /* shift-reduce errors are solved by this */
 %left TIMES DIV     /* shift-reduce errors are solved by this */

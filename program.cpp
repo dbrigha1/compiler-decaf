@@ -13,7 +13,7 @@ COSC 4785
 #include <iomanip>
 #include <vector>
 
-int Token::_column = 1;
+//int Token::_column = 1;
 yyFlexLexer scanner;
 Node *tree;
 
@@ -21,9 +21,9 @@ int main()
 {
   tree = 0;
   yyFlexLexer myScanner;
-  int rtn;
-  Token token;
-  std::vector<Token> errorCatalog;
+//  int rtn;
+//  Token token;
+//  std::vector<Token> errorCatalog;
 /*
   //setting up header row for table
   std::cout << " " << std::setw(10) << std::left << "Line"

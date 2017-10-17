@@ -523,10 +523,18 @@ Dylan Brigham
 Dr. Buckner
 9/24/2017*/
 #line 11 "program.lpp"
-#include "program.h"
+//#include "program.h"
+#include "node.hpp"
+#include "program.tab.h"
 #include <iostream>
 
-#line 530 "program_lex.cpp"
+void yyerror(const char *string)
+{
+  std::cerr << string << endl;
+  return;
+}
+
+#line 538 "program_lex.cpp"
 
 #define INITIAL 0
 #define COMMENT 1
@@ -630,10 +638,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 32 "program.lpp"
+#line 41 "program.lpp"
 
 
-#line 637 "program_lex.cpp"
+#line 645 "program_lex.cpp"
 
 	if ( !(yy_init) )
 		{
@@ -728,49 +736,49 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 34 "program.lpp"
+#line 43 "program.lpp"
 {yyless(0); BEGIN(COMMENT);}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 35 "program.lpp"
+#line 44 "program.lpp"
 {;} 
 	YY_BREAK
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 36 "program.lpp"
+#line 45 "program.lpp"
 {BEGIN(INITIAL);}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 39 "program.lpp"
+#line 48 "program.lpp"
 {BEGIN(BLOCK_COMMENT); yyless(0);}
 	YY_BREAK
 case 5:
 /* rule 5 can match eol */
 YY_RULE_SETUP
-#line 40 "program.lpp"
-{Token::_column = 0;}
+#line 49 "program.lpp"
+{/*Token::_column = 0*/;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 41 "program.lpp"
+#line 50 "program.lpp"
 {BEGIN(INITIAL);}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 42 "program.lpp"
+#line 51 "program.lpp"
 {;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 45 "program.lpp"
+#line 54 "program.lpp"
 {BEGIN(INITIAL); yyless(1); return SINGLE_ERROR;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 47 "program.lpp"
+#line 56 "program.lpp"
 {BEGIN(ERROR_WORD); return WORD_ERROR;}
 	YY_BREAK
 /*<ERROR_WORD>{PUNCTUATION}|{OPERATOR}|{SPACE}|{TAB}|{NEWLINE}
@@ -778,91 +786,91 @@ YY_RULE_SETUP
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 51 "program.lpp"
+#line 60 "program.lpp"
 {BEGIN(INITIAL); yyless(0);}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 54 "program.lpp"
-{Token::_column++;} 
+#line 63 "program.lpp"
+{/*Token::_column++*/;} 
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 55 "program.lpp"
-{Token::_column++;}
+#line 64 "program.lpp"
+{/*Token::_column++*/;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 56 "program.lpp"
+#line 65 "program.lpp"
 {return PUNCTUATION;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 57 "program.lpp"
+#line 66 "program.lpp"
 {return RELATIONOP;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 58 "program.lpp"
+#line 67 "program.lpp"
 {return SUMOP;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 59 "program.lpp"
+#line 68 "program.lpp"
 {return PRODUCTOP;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 60 "program.lpp"
+#line 69 "program.lpp"
 {return UNARYOP;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 61 "program.lpp"
+#line 70 "program.lpp"
 {return OPERATOR;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 62 "program.lpp"
-{return INTEGER;}
+#line 71 "program.lpp"
+{yylval.ttype = new Node; yylval.ttype->setval(atoi(yytext)); return INTEGER;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 63 "program.lpp"
+#line 72 "program.lpp"
 {return FLOAT;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 64 "program.lpp"
+#line 73 "program.lpp"
 {return SCIENTIFIC;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 65 "program.lpp"
+#line 74 "program.lpp"
 {return KEYWORD;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 66 "program.lpp"
+#line 75 "program.lpp"
 {return IDENTIFIER;}
 	YY_BREAK
 case 24:
 /* rule 24 can match eol */
 YY_RULE_SETUP
-#line 67 "program.lpp"
-{Token::_column = 1;}
+#line 76 "program.lpp"
+{/*Token::_column = 1*/;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 68 "program.lpp"
+#line 77 "program.lpp"
 {BEGIN(ERROR); yyless(0);}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 70 "program.lpp"
+#line 79 "program.lpp"
 ECHO;
 	YY_BREAK
-#line 866 "program_lex.cpp"
+#line 874 "program_lex.cpp"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(COMMENT):
 case YY_STATE_EOF(BLOCK_COMMENT):
@@ -1773,7 +1781,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 70 "program.lpp"
+#line 79 "program.lpp"
 
 
 //user entry

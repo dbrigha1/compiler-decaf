@@ -46,7 +46,7 @@ UNKNOWN     .
 
 
 "/*"                                     {BEGIN(BLOCK_COMMENT); yyless(0);}
-<BLOCK_COMMENT>[\n]                      {Token::_column = 0;}
+<BLOCK_COMMENT>[\n]                      {/*Token::_column = 0*/;}
 <BLOCK_COMMENT>"*/"                      {BEGIN(INITIAL);}
 <BLOCK_COMMENT>.                         {;}
 
@@ -60,8 +60,8 @@ UNKNOWN     .
 <ERROR_WORD>[^{IDENTIFIER}]         {BEGIN(INITIAL); yyless(0);}
 
 
-{SPACE}       {Token::_column++;} 
-{TAB}         {Token::_column++;}
+{SPACE}       {/*Token::_column++*/;} 
+{TAB}         {/*Token::_column++*/;}
 {PUNCTUATION} {return PUNCTUATION;}
 {RELATIONOP}  {return RELATIONOP;}
 {SUMOP}       {return SUMOP;}
@@ -73,7 +73,7 @@ UNKNOWN     .
 {SCIENTIFIC}  {return SCIENTIFIC;}
 {KEYWORD}     {return KEYWORD;}
 {IDENTIFIER}  {return IDENTIFIER;}
-{NEWLINE}     {Token::_column = 1;}
+{NEWLINE}     {/*Token::_column = 1*/;}
 {UNKNOWN}     {BEGIN(ERROR); yyless(0);}
 
 %%
