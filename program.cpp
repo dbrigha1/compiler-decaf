@@ -1,26 +1,31 @@
-/*program2.cpp
+/*program.cpp
 Dylan Brigham
 COSC 4785
-9/24/17
+10-20-2017
+HMK03
 */
 
 #include <stdlib.h>
 #include<FlexLexer.h>
 #include<iostream>
 //#include "program.h"
-//#include "program.tab.h"
 #include "node.hpp"
+#include "program.tab.h"
 #include <iomanip>
 #include <vector>
-
-//int Token::_column = 1;
+using std::cout;
+using std::vector;
+using std::cerr;
+unsigned int column = 0;
 yyFlexLexer scanner;
 Node *tree;
+vector<Node*> nodeVec;
 
 int main()
 {
   tree = 0;
   yyFlexLexer myScanner;
+
 //  int rtn;
 //  Token token;
 //  std::vector<Token> errorCatalog;
@@ -59,5 +64,24 @@ int main()
 	   }
      
 */
+        const int errorLimit = 20;
+	int counter = 0;
+ 	yyparse();
+	while(!nodeVec.empty())
+	{
+	  if(counter > errorLimit)
+	  {
+	    cerr << "Too Many Errors!" << endl;
+	    cerr << "Ending Program..."<< endl;
+	    exit(0);
+	  }
+	  nodeVec.back()->print(&cout);
+	  nodeVec.pop_back();
+	  cout << endl;
+	  counter++;
+	}
+	cout << endl;
+	tree->print(&cout);
+	cout << endl;
       return 0;
 }                    

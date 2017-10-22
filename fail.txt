@@ -1,29 +1,28 @@
-int type;
-int[][]type;
+int type int[][]type;
 int[]type;
 ident type;
 ident[][]type;
 ident[]type;
 this
 ident
-this.ident
+this.ident;
 ident.ident
 this[expression]
 ident[ex]
-this.ident[2+2]
+this.ident2+2]
 ident.ident[5%5]
 name
 43
 null
-name()
-read()
-new ident()
+name
+read
+new ident
 new ident[g][][]
 +5
 -4
 !3
 3==4
-4!=34
+4!=
 4+3
 2*4
 (72-(43*9))

@@ -1,8 +1,10 @@
 /* vim: ft=lex
-program2.lpp
+program.lpp
 Dylan Brigham
 Dr. Buckner
-9/24/2017*/
+10/20/2017
+HMK03
+*/
 
 %option outfile = "program_lex.cpp"
 %option noyywrap
@@ -12,10 +14,13 @@ Dr. Buckner
 #include "node.hpp"
 #include "program.tab.h"
 #include <iostream>
+using std::cout;
+using std::endl;
+extern unsigned int column;
 
 void yyerror(const char *string)
-{
-  std::cerr << string << endl;
+{  if(strcmp(string, "syntax error"))
+    std::cerr << string << endl;
   return;
 }
 %}
@@ -23,16 +28,10 @@ void yyerror(const char *string)
 
 SPACE       [ ]+                                                              
 TAB         [\t]+                                                            
-PUNCTUATION "."|","|"?"|";"|"\""|"\'"|"\("|"\)"|"\["|"\]"|"\{"|"\}"
-RELATIONOP  "=="|"!="|"<="|">="|"<"|">"
-SUMOP       "+"|"\-"|"||" 
-PRODUCTOP   "*"|"/"|"%"|"&&"
-UNARYOP     "+"|"\-"|"\!"                           
-OPERATOR    "+"|"\-"|"*"|"/"|"%"|"="|"~"                                              
-INTEGER     [1-9][0-9]*                                                      
+INTEGER     [1-9][0-9]*
+OPERATOR    "+"|"\-"|"*"|"/"|"%"|"="|"~"                                                       
 FLOAT       [0-9]+\.[0-9]+ 
 SCIENTIFIC  {FLOAT}[eE][+\-]?{INTEGER}
-KEYWORD  "int"|"print"|"if"|"void"|"read"|"else"|"class"|"return"|"this"|"new"|"while" 
 IDENTIFIER  [_]+?[a-zA-Z][_a-zA-Z0-9]*                                       
 NEWLINE     [\n]                                                            
 UNKNOWN     .                                                              
@@ -44,37 +43,53 @@ UNKNOWN     .
 <COMMENT>[^\n]+                           {;} 
 <COMMENT>[\n]                             {BEGIN(INITIAL);}
 
-
 "/*"                                     {BEGIN(BLOCK_COMMENT); yyless(0);}
-<BLOCK_COMMENT>[\n]                      {/*Token::_column = 0*/;}
+<BLOCK_COMMENT>[\n]                      {column = 0;}
 <BLOCK_COMMENT>"*/"                      {BEGIN(INITIAL);}
 <BLOCK_COMMENT>.                         {;}
 
+<ERROR>{UNKNOWN}{OPERATOR}|{UNKNOWN}{SPACE}|{UNKNOWN}{TAB}|{UNKNOWN} {BEGIN(INITIAL); yyless(1); column+=yyleng; cout <<"character error: " << yylineno << ": " << column << endl;}
 
-<ERROR>{UNKNOWN}{OPERATOR}|{UNKNOWN}{SPACE}|{UNKNOWN}{TAB}|{UNKNOWN} {BEGIN(INITIAL); yyless(1); return SINGLE_ERROR;}
+<ERROR>{UNKNOWN}{IDENTIFIER}*    {BEGIN(ERROR_WORD); column+=yyleng; cout <<"word error: " << yylineno << ": " << column << endl; }
 
-<ERROR>{UNKNOWN}{IDENTIFIER}*                                        {BEGIN(ERROR_WORD); return WORD_ERROR;}
-
- /*<ERROR_WORD>{PUNCTUATION}|{OPERATOR}|{SPACE}|{TAB}|{NEWLINE}
- * {BEGIN(INITIAL); yyless(0);} */
 <ERROR_WORD>[^{IDENTIFIER}]         {BEGIN(INITIAL); yyless(0);}
 
 
-{SPACE}       {/*Token::_column++*/;} 
-{TAB}         {/*Token::_column++*/;}
-{PUNCTUATION} {return PUNCTUATION;}
-{RELATIONOP}  {return RELATIONOP;}
-{SUMOP}       {return SUMOP;}
-{PRODUCTOP}   {return PRODUCTOP;}
-{UNARYOP}     {return UNARYOP;}
-{OPERATOR}    {return OPERATOR;}
-{INTEGER}     {yylval.ttype = new Node; yylval.ttype->setval(atoi(yytext)); return INTEGER;}
-{FLOAT}       {return FLOAT;}
-{SCIENTIFIC}  {return SCIENTIFIC;}
-{KEYWORD}     {return KEYWORD;}
-{IDENTIFIER}  {return IDENTIFIER;}
-{NEWLINE}     {/*Token::_column = 1*/;}
-{UNKNOWN}     {BEGIN(ERROR); yyless(0);}
+"+"  {column+=yyleng; return PLUS;}
+"-"  {column+=yyleng; return MINUS;}
+"!"  {column+=yyleng; return NOT;}
+"==" {column+=yyleng; return COMPARE_EQUAL;}
+"!=" {column+=yyleng; return COMPARE_NOTEQUAL;}
+"<=" {column+=yyleng; return LESSOREQUAL;}
+">=" {column+=yyleng; return GREATEROREQUAL;}
+"<"  {column+=yyleng; return LESSTHAN;}
+">"  {column+=yyleng; return GREATERTHAN;}
+"||" {column+=yyleng; return COMPARE_OR;}
+"*"  {column+=yyleng; return TIMES;}
+"/"  {column+=yyleng; return DIV;}
+"%"  {column+=yyleng; return MOD;}
+"&&" {column+=yyleng; return COMPARE_AND;}
+"["  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("["); return LBR;}
+"]"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("]"); return RBR;}
+"("  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("(");  return LPAREN;}
+")"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(")");  return RPAREN;}
+"[]" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("[]"); return BRACKETS;}
+"()" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("()"); return PAREN;}
+";"  {column+=yyleng; return SEMI;}
+"."  {column+=yyleng; return DOT;}
+"int"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("int"); return INT;}
+"this" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("this"); return THIS;}
+"new"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("new"); return NEW;}
+"read" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("read"); return READ;}
+"null" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("null"); return NLL;}
 
+{SPACE}       {column++;} 
+{TAB}         {column++;}
+{INTEGER}     {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(atoi(yytext)); return INTEGER;}
+{FLOAT}       {column+=yyleng; return FLOAT;}
+{SCIENTIFIC}  {column+=yyleng; return SCIENTIFIC;}
+{IDENTIFIER}  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(yytext); return IDENTIFIER;}
+{NEWLINE}     {column =0; return NEWLINE;}
+{UNKNOWN}     {BEGIN(ERROR); yyless(0);}
 %%
 //user entry

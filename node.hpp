@@ -26,6 +26,8 @@ using std::string;
 using std::endl;
 using std::ostream;
 
+extern unsigned int column;
+extern yyFlexLexer scanner;
 
 class Node
 {
@@ -100,9 +102,8 @@ class Node
     virtual void print(ostream *out = 0)
     {
       if(left) left->print(out);
-      *out << sval ;
+      *out << sval;
       if(right) right->print(out);
-      //*out << endl;
       return;
     }
   protected:
@@ -125,6 +126,36 @@ class nodeMinus : public Node
     {
       if(left) {
         *out << "-";
+        left->print(out);
+      }
+      //*out << endl;
+      return;
+    }
+};
+class nodePlus : public Node
+{
+  public:
+    nodePlus(Node *lf=0,Node *rt=0):Node(lf,rt){}
+
+    virtual void print(ostream *out = 0)
+    {
+      if(left) {
+        *out << "+";
+        left->print(out);
+      }
+      //*out << endl;
+      return;
+    }
+};
+class nodeNot : public Node
+{
+  public:
+    nodeNot(Node *lf=0,Node *rt=0):Node(lf,rt){}
+
+    virtual void print(ostream *out = 0)
+    {
+      if(left) {
+        *out << "!";
         left->print(out);
       }
       //*out << endl;
@@ -154,13 +185,137 @@ class nodeParExp : public Node
 
     virtual void print(ostream *out = 0)
     {
-      *out << "( ";
+      *out << "(";
       if(left) left->print(out);
       if(right) right->print(out);
-      *out << " )" ;//<< endl;
+      *out << ")" ;//<< endl;
       return;
     }
 };
 
+class nodeType : public Node
+{
+  public:
+    nodeType(Node *lf=0,Node *rt=0):Node(lf,rt){}
 
+    virtual void print(ostream *out = 0)
+    {
+      if(left) left->print(out);
+      *out << sval;
+      if(right) right->print(out);
+      return;
+    }
+};
+
+class nodeVarDec : public Node
+{
+  public:
+    nodeVarDec(Node *lf=0,Node *rt=0):Node(lf,rt){}
+
+    virtual void print(ostream *out = 0)
+    {
+      if(left) left->print(out);
+      *out << sval;
+      if(right) right->print(out);
+      *out << ";" ;
+      return;
+    }
+};
+class nodeName : public Node
+{
+  public:
+    nodeName(Node *lf=0,Node *rt=0):Node(lf,rt){}
+
+    virtual void print(ostream *out = 0)
+    {
+      if(left) left->print(out);
+      *out << "[";
+      if(right) right->print(out);
+      *out << "]" ;
+      return;
+    }
+};
+
+class nodeNewExp1 : public Node
+{
+  public:
+    nodeNewExp1(Node *lf=0,Node *rt=0):Node(lf,rt){}
+
+    virtual void print(ostream *out = 0)
+    {
+      if(left) left->print(out);
+      if(right) right->print(out);
+      *out << "()";
+      return;
+    }
+};
+class nodeNewExp : public Node
+{
+  public:
+    nodeNewExp(Node *lf=0,Node *rt=0):Node(lf,rt){}
+
+    virtual void print(ostream *out = 0)
+    {
+      *out << "new ";
+      if(left) left->print(out);
+      *out << "<[";
+      if(right) right->print(out);
+      *out << "]>* <[]>*";
+      return;
+    }
+};
+class nodeArray : public Node
+{
+  public:
+    nodeArray(Node *lf=0,Node *rt=0):Node(lf,rt){}
+
+    virtual void print(ostream *out = 0)
+    {
+      *out << "[";
+      if(left) left->print(out);
+      *out << "]";
+      return;
+    }
+};
+class nodeError : public Node
+{
+  public:
+    nodeError(Node *lf=0,Node *rt=0):Node(lf,rt){}
+
+    virtual void print(ostream *out = 0)
+    {
+      *out << "ERROR line: " << scanner.lineno() << " column: " << column;
+      if(left) left->print(out);
+      if(right) right->print(out);
+      return;
+    }
+};
+class nodeDetails : public Node
+{
+  public:
+    nodeDetails(Node *lf=0,Node *rt=0):Node(lf,rt){}
+
+    virtual void print(ostream *out = 0)
+    {
+      if(left){*out <<"line:"; left->print(out);}
+      *out <<" ";
+      if(right) {*out <<"column: "; right->print(out);}
+      *out << " ";
+      return;
+    }
+};
+class nodeInfo : public Node
+{
+  public:
+    nodeInfo (unsigned int i)
+    {
+      ival=i;
+    };
+
+    virtual void print(ostream *out = 0)
+    {
+      *out << ival;
+      return;
+    }
+};
 #endif
