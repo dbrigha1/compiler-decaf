@@ -1,9 +1,9 @@
-/* vim: ft=yacc
+/*vim: ft=yacc
    program.y
    Dylan Brigham
    Compilers
    10-20-17
-   HMK03
+   HMK04
  */
 
 
@@ -45,38 +45,58 @@ void yyerror(const char *);
 
 %union {
   Node *ttype;
-  char* msg;
 }
 
 %token NEWLINE
-%token LAB
-%token RAB
+%token<ttype> LAB
+%token<ttype> RAB
+%token<ttype> DOT
+%token<ttype> COMMA
+%token<ttype> SEMI
+%token<ttype> CLASS
+%token<ttype> LBRACE
+%token<ttype> RBRACE
+%token<ttype> VOID
+%token<ttype> EQUALS
+%token<ttype> PRINT
 %token<ttype> SINGLE_ERROR
 %token<ttype> WORD_ERROR
 %token<ttype> LBR
 %token<ttype> RBR
 %token<ttype> BRACKETS
 %token<ttype> PAREN
-%token DOT
 %token<ttype> THIS
 %token<ttype> NEW
 %token<ttype> NLL
 %token<ttype> READ
 %token<ttype> INT
-%token SEMI
 %token<ttype> FLOAT
 %token<ttype> SCIENTIFIC
 %token<ttype> IDENTIFIER
+%type<ttype> ClassDeclaration
+%type<ttype> ClassBody
+%type<ttype> ConstructorDeclaration
+%type<ttype> MethodDeclaration
+%type<ttype> MultiVarDec 
+%type<ttype> MultiConstructorDec 
+%type<ttype> MultiMethodDec
+%type<ttype> MultiLocalVarDec 
+%type<ttype> MultiStatement
+%type<ttype> ResultType
+%type<ttype> ParameterList
+%type<ttype> Parameter
+%type<ttype> Block
+%type<ttype> LocalVarDeclaration
+%type<ttype> Statement
 %type<ttype> NewExpression
-%type<msg> error
 %type<ttype> exp
 %type<ttype> Type
 %type<ttype> SimpleType //mod2
 %type<ttype> VarDeclaration //mod2
 %type<ttype> MultiBrackets
 %type<ttype> MultiArrays
-%type<ttype> Element
-%type<ttype> Assignment
+//%type<ttype> Element
+//%type<ttype> Assignment
 %type<ttype> Name //mod2
 %token<ttype> INTEGER 
 %token<ttype> RPAREN LPAREN
@@ -87,81 +107,119 @@ void yyerror(const char *);
 
 %% /* The grammar follows.  */
 
-Program: Assignment              {tree = $1;}
+Program: ClassDeclaration              {tree = $1;}
 ;
-Assignment:   Element            {
-	                         $$ = $1;
-	                         }
-       | Assignment Element      {
-                                 $$ = new Node($1, $2);
-                                 $$->setval("");
-                                 }
+ClassDeclaration:   CLASS IDENTIFIER ClassBody     {
+		                                   Node* temp = new Node($1, $2);
+                                                   $$ = new Node(temp, $3);
+                                                   }     
 ;
-Element:  VarDeclaration  {$$ = $1; $$->setval(" ");}
-       | exp              {
-                          $$ = new Node($1, 0);
-                          $$->setval("");
-                          }
-       | NEWLINE          { //we want to ignore newline characters
-                           Node* newLineNode = new Node;
-                           newLineNode->setval("\n");
-                           $$= newLineNode;
-                           $$->setval("");
-                           }/*
-       | error NEWLINE                    {//if an error is read it will continue until
-                                            //a newline character is recognized
-                                                 yyclearin; yyerrok;
-                                                 Node* newLineNode = new Node;
-                                                 newLineNode->setval("\n"); 
-                                                 $$= newLineNode;
-                                                 column = 1;
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno()-1);
-                                                 Node* details = new nodeDetails(nodeLine, 0);
-                                                 Node* message = new Node;
-                                                 message->setval("Expression error: ");
-                                                 Node* nodeErrorMessage = new Node(message, details);
-                                                 Node* err = new Node; err->setval("?");
-                                                 Node* total = new Node(nodeErrorMessage,err); 
-                                                 nodeVec.push_back(total);
-                                       }
-       | error NEWLINE                     {//if an error is read it will continue until
-                                            //a newline character is recognized
-                                                 $$ ->setval(" "); 
-                                                 Node* newLineNode = new Node;
-                                                 newLineNode->setval("\n");
-                                                 $$= new Node($$, newLineNode);
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno()-1);
-                                               //  nodeInfo* nodeColumn = new nodeInfo(column);
-                                                 Node* details = new nodeDetails(nodeLine, 0);
-                                                 Node* message = new Node;
-                                                 message->setval("syntax error: ");
-                                                 Node* nodeErrorMessage = new Node(message, details);
-                                            //     Node* temp = new Node($$, 0);
-                                            //     temp->setval(" ");
-                                            //     Node* temp2 = new Node(nodeErrorMessage, temp);
-                                                 column = 1;
-                                                 nodeVec.push_back(nodeErrorMessage);
-                                       }*/
-       | VarDeclaration NEWLINE { Node* newLineNode = new Node;
-                                 newLineNode->setval("\n"); 
-                                 $$= new Node($1,newLineNode);
-                                 column = 1;
-                                    
-                               }
-       | exp NEWLINE          { Node* newLineNode = new Node;
-                                newLineNode->setval("\n"); 
-                                $$= new Node($1,newLineNode);
-                                column = 1;
-                               }
-;
+ClassBody: LBRACE RBRACE                                                    {$$ = new Node($1,$2);}
+         | LBRACE MultiVarDec RBRACE                                        {
+                                                                             Node* temp = new Node($1, $2);
+                                                                             $$ = new Node(temp, $3);  
+                                                                            }
+         | LBRACE MultiConstructorDec RBRACE                                {
+                                                                             Node* temp = new Node($1, $2);
+                                                                             $$ = new Node(temp, $3);  
+                                                                            }
+         | LBRACE MultiMethodDec RBRACE                                     {
+                                                                             Node* temp = new Node($1, $2);
+                                                                             $$ = new Node(temp, $3);  
+                                                                            }
+         | LBRACE MultiVarDec MultiConstructorDec RBRACE                    {
+                                                                             Node* temp = new Node($1, $2);
+                                                                             Node* temp2 = new Node(temp, $3);
+                                                                             $$ = new Node (temp2, $4); 
+                                                                            }
+         | LBRACE MultiVarDec MultiMethodDec RBRACE                         {
+                                                                             Node* temp = new Node($1, $2);
+                                                                             Node* temp2 = new Node(temp, $3);
+                                                                             $$ = new Node (temp2, $4); 
 
+                                                                            }
+         | LBRACE MultiConstructorDec MultiMethodDec RBRACE                 {
+                                                                             Node* temp = new Node($1, $2);
+                                                                             Node* temp2 = new Node(temp, $3);
+                                                                             $$ = new Node (temp2, $4); 
+
+                                                                            } 
+         | LBRACE MultiVarDec MultiConstructorDec MultiMethodDec RBRACE     {
+                                                                             Node* temp = new Node($1, $2);
+                                                                             Node* temp2 = new Node(temp, $3);
+                                                                             Node* temp3 = new Node (temp2, $4);
+                                                                             $$ = new Node(temp3, $5);
+                                                                            }
+         ;
+MultiVarDec: VarDeclaration                                                 {$$ = $1; $$->setval(" ");}
+           | MultiVarDec VarDeclaration                                     {$$ = new nodeType($1, $2); $$->setval("");}
+           ;
+MultiConstructorDec: ConstructorDeclaration                                 {$$ = $1; $$->setval(" ");}
+                   | MultiConstructorDec ConstructorDeclaration             {$$ = new nodeType($1, $2); $$->setval("");}
+                   ;
+MultiMethodDec: MethodDeclaration                                   {$$ = $1; $$->setval(" ");}
+                      | MultiMethodDec MethodDeclaration            {$$ = new nodeType($1, $2); $$->setval("");}
+                      ;
+ConstructorDeclaration: IDENTIFIER LPAREN ParameterList RPAREN Block        {
+                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* temp2 = new Node(temp, $3);
+                                                                            Node* temp3 = new Node(temp2, $4);
+                                                                            $$ = new Node(temp3, $5);
+                                                                            }
+                      ;
+MethodDeclaration: ResultType IDENTIFIER LPAREN ParameterList RPAREN Block  {
+                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* temp2 = new Node(temp, $3);
+                                                                            Node* temp3 = new Node(temp2, $4);
+                                                                            Node* temp4 = new Node(temp3, $5);
+                                                                            $$ = new Node(temp4, $6);
+                                                                            }
+                 ;
+ResultType: Type              {$$ = $1;}
+          | VOID              {$$ = $1;}
+          ;
+ParameterList: Parameter                                                {$$ = $1;}
+             | ParameterList COMMA Parameter                            {
+                                                                         Node* temp = new Node($1, $2);
+                                                                         $$ = new Node(temp, $3);                                                                         
+                                                                        }
+             ;
+Parameter: Type IDENTIFIER                                              {$$ = new Node($1, $2);}
+         ;
+Block: LBRACE RBRACE                                                    {$$ = new Node($1, $2);}
+     | LBRACE MultiLocalVarDec RBRACE                                   {
+                                                                         Node* temp = new Node($1, $2);
+                                                                         $$ = new Node(temp, $3);  
+                                                                        }
+     | LBRACE MultiStatement RBRACE                                     {
+                                                                         Node* temp = new Node($1, $2);
+                                                                         $$ = new Node(temp, $3);  
+                                                                        }
+     | LBRACE MultiLocalVarDec MultiStatement RBRACE                    {
+                                                                         Node* temp = new Node($1, $2);
+                                                                         Node* temp2 = new Node(temp, $3);
+                                                                         $$ = new Node(temp2, $4);  
+                                                                        }
+     ;
+MultiLocalVarDec: LocalVarDeclaration                                           {$$ = $1; $$->setval(" ");}
+                | MultiLocalVarDec LocalVarDeclaration                          {$$ = new nodeType($1, $2); $$->setval("");}
+                ;
+MultiStatement: Statement                                               {$$ = $1; $$->setval(" ");}
+              | MultiStatement Statement                                {$$ = new nodeType($1, $2); $$->setval("");}
+              ;
+LocalVarDeclaration: Type IDENTIFIER SEMI       {Node* temp = new Node($1, $2); $$ = new Node(temp, $3);}
+;
+Statement: SEMI                             {$$ = $1;}
+         | Name EQUALS exp                  {Node* temp = new Node($1, $2); $$ = new Node(temp, $3);}
+         | Block                            {$$ = $1;}
+;
 VarDeclaration:   Type IDENTIFIER SEMI                    {
                                                             $$ = new Node($1, $2);
                                                             $$->setval(" ");
                                                             Node* semi = new Node;
                                                             semi->setval(";");
                                                             $$ = new Node($$, semi);	
-                                                            }
+                                                            }/*
        | error SEMI                     {//if an error is read it will continue until
                                             //a newline character is recognized
                                                  yyerrok; yyclearin;
@@ -177,47 +235,7 @@ VarDeclaration:   Type IDENTIFIER SEMI                    {
                                                  Node* total = new Node(nodeErrorMessage,example); 
                                                  
                                                  nodeVec.push_back(total);
-                                       }/*
-       | error IDENTIFIER SEMI             {//if an error is read it will continue until
-                                            //a newline character is recognized
-                                               yyclearin; yyerrok;
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
-                                               //  nodeInfo* nodeColumn = new nodeInfo(column);
-                                          //       yyerror($1);
-                                                 Node* details = new nodeDetails(nodeLine, 0);
-                                                 Node* message = new Node;
-                                                 message->setval("Variable Declaration error: ");
-                                                 Node* nodeErrorMessage = new Node(message, details);
-                                                 Node* semi = new Node; semi->setval(";");
-                                                 Node* example = new Node($2, semi);
-                                                 example->setval("");
-                                             //    Node* example2 = new Node(example, semi);
-                                              //   example2->setval("");
-                                               //  Node* semi = new Node;
-                                              //   semi->setval(";");
-                                                 Node* total = new Node(nodeErrorMessage,example); 
-                                              //   Node* temp3 = new Node(nodeErrorMessage, $1);
-                                                 
-                                                 nodeVec.push_back(total);
                                        }*/
-                 | IDENTIFIER IDENTIFIER SEMI               {
-                                                          //  $$ = new nodeVarDec($1,$2);
-                                                          //  $$->setval(" ");
-                                                            $$ = new Node($1, $2);
-                                                            $$->setval(" ");
-                                                            Node* semi = new Node;
-                                                            semi->setval(";");
-                                                            $$ = new Node($$, semi);	
-                                                            }
-                 | IDENTIFIER MultiBrackets IDENTIFIER SEMI {
-                                                            $$ = new Node($1, $2);
-                                                            $$->setval(" ");
-                                                            $$ = new Node($$, $3);
-                                                            $$->setval(" "); 
-                                                            Node* semi = new Node;
-                                                            semi->setval(";");
-                                                            $$ = new Node($$, semi);	
-                                                            }
 ;
 
 MultiBrackets: BRACKETS               { $$ =$1;}
@@ -232,7 +250,7 @@ Type:   SimpleType 	{
        | Type BRACKETS    { 
                           $$ = new nodeType($1, $2);
                           $$->setval(""); 
-                        } 
+                        }/* 
        | error BRACKETS                     {
                                              yyerrok; yyclearin;
                                              Node* er  = new Node;
@@ -255,11 +273,10 @@ Type:   SimpleType 	{
                                               //   Node* temp3 = new Node(nodeErrorMessage, $1);
                                                  
                                                  nodeVec.push_back(temp2);
-                                       }
+                                       }*/
 ;
-SimpleType:   INT       { 
-                        $$ = $1;	
-                        }
+SimpleType: INT       {$$ = $1;}
+          | IDENTIFIER {$$ =$1;}  
 ;
 Name:   THIS 		{ 
                           $$ = $1;	
@@ -374,7 +391,7 @@ exp:  Name 		{
                                                  Node* err = new Node; err->setval("?");
                                                  Node* total = new Node(nodeErrorMessage,err); 
                                                  nodeVec.push_back(total);
-                                       }*/
+                                       }
        |  error NEWLINE                    {//if an error is read it will continue until
                                             //a newline character is recognized
                                                  yyerrok; yyclearin;
@@ -390,7 +407,7 @@ exp:  Name 		{
                                                  Node* err = new Node; err->setval("?");
                                                  Node* total = new Node(nodeErrorMessage,err); 
                                                  nodeVec.push_back(total);
-                                       }
+                                       }*/
 ;
 NewExpression: NEW IDENTIFIER PAREN {
                            //  $$ = new nodeNewExp1($1, $2);
@@ -425,7 +442,7 @@ NewExpression: NEW IDENTIFIER PAREN {
                                                          expNode2->setval("");
                                                          $$ = new Node(expNode2, $4);
                                                          $$->setval("");
-                                                         }
+                                                         }/*
        | NEW error NEWLINE                    {//if an error is read it will continue until
                                             //a newline character is recognized
                                                  yyerrok; yyclearin;
@@ -441,7 +458,7 @@ NewExpression: NEW IDENTIFIER PAREN {
                                                  Node* err = new Node; err->setval("New ?");
                                                  Node* total = new Node(nodeErrorMessage,err); 
                                                  nodeVec.push_back(total);
-                                       }
+                                       }*/
 ;
 MultiArrays: LBR exp RBR            {
 	                            $$ = new nodeArray($2, 0);

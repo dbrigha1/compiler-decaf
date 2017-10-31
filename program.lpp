@@ -69,14 +69,21 @@ UNKNOWN     .
 "/"  {column+=yyleng; return DIV;}
 "%"  {column+=yyleng; return MOD;}
 "&&" {column+=yyleng; return COMPARE_AND;}
+","  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(","); return COMMA;}
+"class"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("class"); return CLASS;}
+"{"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("{"); return LBRACE;}
+"}"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("}"); return RBRACE;}
+"void"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("void"); return VOID;}
+"="  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("="); return EQUALS;}
+"print"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("print"); return PRINT;}
 "["  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("["); return LBR;}
 "]"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("]"); return RBR;}
 "("  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("(");  return LPAREN;}
 ")"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(")");  return RPAREN;}
 "[]" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("[]"); return BRACKETS;}
 "()" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("()"); return PAREN;}
-";"  {column+=yyleng; return SEMI;}
-"."  {column+=yyleng; return DOT;}
+";"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("()");  return SEMI;}
+"."  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("()");  return DOT;}
 "int"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("int"); return INT;}
 "this" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("this"); return THIS;}
 "new"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("new"); return NEW;}
