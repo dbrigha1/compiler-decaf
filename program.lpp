@@ -86,6 +86,10 @@ UNKNOWN     .
 "."  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("()");  return DOT;}
 "int"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("int"); return INT;}
 "this" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("this"); return THIS;}
+"if"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("if"); return IF;}
+"else"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("else"); return ELSE;}
+"while"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("while"); return WHILE;}
+"return"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("return"); return RETURN;}
 "new"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("new"); return NEW;}
 "read" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("read"); return READ;}
 "null" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("null"); return NLL;}
@@ -96,7 +100,7 @@ UNKNOWN     .
 {FLOAT}       {column+=yyleng; return FLOAT;}
 {SCIENTIFIC}  {column+=yyleng; return SCIENTIFIC;}
 {IDENTIFIER}  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(yytext); return IDENTIFIER;}
-{NEWLINE}     {column =0; return NEWLINE;}
+{NEWLINE}     {column =0;}
 {UNKNOWN}     {BEGIN(ERROR); yyless(0);}
 %%
 //user entry

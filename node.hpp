@@ -101,8 +101,8 @@ class Node
 
     virtual void print(ostream *out = 0)
     {
-      if(left) left->print(out);
       *out << sval;
+      if(left) left->print(out);
       if(right) right->print(out);
       return;
     }
