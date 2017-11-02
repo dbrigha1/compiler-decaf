@@ -111,7 +111,6 @@ void yyerror(const char *);
 %left<ttype> PLUS MINUS COMPARE_OR
 %left<ttype> TIMES DIV MOD COMPARE_AND
 %precedence NEG POS NOTTY    
- 
 
 %% /* The grammar follows.  */
 
@@ -280,11 +279,29 @@ MethodDeclaration: ResultType IDENTIFIER LPAREN ParameterList RPAREN Block  {
                                                                             name->setval("<MethodDeclaration>--> <ResultType> IDENTIFIER LPAREN RPAREN <Block>\n");
                                                                             $$ = new Node(name);
                                                                             }
+                 | Type IDENTIFIER LPAREN ParameterList RPAREN Block       {
+                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* temp2 = new Node(temp, $3);
+                                                                            Node* temp3 = new Node(temp2, $4);
+                                                                            Node* temp4 = new Node(temp3, $5);
+                                                                            Node* name = new Node(temp4, $6);
+                                                                            name->setval("<MethodDeclaration>--> <ResultType> IDENTIFIER LPAREN RPAREN <Block>\n");
+                                                                            $$ = new Node(name);
+                                                                            }
                  | IDENTIFIER IDENTIFIER LPAREN RPAREN Block                {
                                                                             Node* temp = new Node($1, $2);
                                                                             Node* temp2 = new Node(temp, $3);
                                                                             Node* temp3 = new Node(temp2, $4);
                                                                             Node* name = new Node(temp3, $5);
+                                                                            name->setval("<MethodDeclaration>--> IDENTIFIER IDENTIFIER LPAREN RPAREN <Block>\n");
+                                                                            $$ = new Node(name);
+                                                                            }
+                 | IDENTIFIER IDENTIFIER LPAREN ParameterList RPAREN Block                {
+                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* temp2 = new Node(temp, $3);
+                                                                            Node* temp3 = new Node(temp2, $4);
+                                                                            Node* temp4 = new Node(temp3, $5);
+                                                                            Node* name = new Node(temp4, $6);
                                                                             name->setval("<MethodDeclaration>--> IDENTIFIER IDENTIFIER LPAREN RPAREN <Block>\n");
                                                                             $$ = new Node(name);
                                                                             }
@@ -295,6 +312,17 @@ MethodDeclaration: ResultType IDENTIFIER LPAREN ParameterList RPAREN Block  {
                                                                             Node* temp4 = new Node(temp3, $5);
                                                                             Node* name = new Node(temp4, $6);
                                                                             name->setval("<MethodDeclaration>--> IDENTIFIER <MultiBrackets> IDENTIFIER LPAREN RPAREN <Block>\n");
+                                                                            $$ = new Node(name);
+                                                                                          }
+                 | IDENTIFIER MultiBrackets IDENTIFIER LPAREN ParameterList RPAREN Block 
+                                                                           {
+                                                   Node* temp = new Node($1, $2);
+                                                   Node* temp2 = new Node(temp, $3);
+                                                   Node* temp3 = new Node(temp2, $4);
+                                                   Node* temp4 = new Node(temp3, $5);
+                                                   Node* temp5 = new Node(temp4, $6);
+                                                   Node* name = new Node(temp5, $7);
+                                                   name->setval("<MethodDeclaration>--> IDENTIFIER <MultiBrackets> IDENTIFIER LPAREN <ParameterList> RPAREN <Block>\n");
                                                                             $$ = new Node(name);
                                                                             }
                  ;
@@ -418,7 +446,7 @@ Statement: SEMI                              {
 	 }
          | Name EQUALS exp                   {
                                              Node* temp = new Node($1, $2); 
-                                             Node* name = new Node(temp, $3); cout << "Statement";
+                                             Node* name = new Node(temp, $3);
                                              name->setval("<Statement>--> <Name> EQUALS <exp>\n");
                                              $$ = new Node(name);
                                              }
@@ -584,7 +612,7 @@ Name:   THIS 		{
                           $$ = new Node(name);
                         }
        | IDENTIFIER    { 
-                          Node* name = new Node($1); cout << "name";
+                          Node* name = new Node($1); 
                           name->setval("<Name>--> IDENTIFIER\n");
                           $$ = new Node(name);
                         }
@@ -614,7 +642,6 @@ Arglist: exp              {
        ;
 ConditionalStatement: IF LPAREN exp RPAREN Statement {
                               Node* temp = new Node($1, $2);
-                              temp->setval(" ");
                               Node* temp2 = new Node(temp, $3);
                               Node* temp3 = new Node(temp2, $4);
                               Node* name = new Node(temp3, $5);
@@ -624,7 +651,6 @@ ConditionalStatement: IF LPAREN exp RPAREN Statement {
 		    | IF LPAREN exp RPAREN Statement ELSE Statement 
                             {
                               Node* temp = new Node($1, $2);
-                              temp->setval(" ");
                               Node* temp2 = new Node(temp, $3);
                               Node* temp3 = new Node(temp2, $4);
                               Node* temp4 = new Node(temp3, $5);
@@ -671,7 +697,6 @@ exp:  Name 		{
        | READ LPAREN RPAREN  	{ 
                           Node* temp = new Node($1, $2);
                           Node* name = new Node(temp, $3);
-                          cout << "read()";
                           name->setval("<exp>--> READ PARENTHESIS\n");
                           $$ = new Node(name);
                          // $1->setval("read()");
@@ -851,7 +876,6 @@ exp:  Name 		{
 ;
 NewExpression: NEW IDENTIFIER LPAREN RPAREN {
                               Node* temp = new Node($1, $2);
-                              temp->setval(" ");
                               Node* temp2 = new Node(temp, $3);
                               Node* name = new Node(temp2, $4);
                               name->setval("<NewExpression>--> NEW IDENTIFIER LPAREN RPAREN\n");
@@ -859,7 +883,6 @@ NewExpression: NEW IDENTIFIER LPAREN RPAREN {
                              }
              | NEW IDENTIFIER LPAREN Arglist RPAREN {
                               Node* temp = new Node($1, $2);
-                              temp->setval(" ");
                               Node* temp2 = new Node(temp, $3);
                               Node* temp3 = new Node(temp2, $4);
                               Node* name = new Node(temp3, $5);
@@ -874,23 +897,19 @@ NewExpression: NEW IDENTIFIER LPAREN RPAREN {
                | NEW SimpleType MultiArrays              {
                                                          
                                                          Node* expNode = new Node($1, $2);
-                                                         expNode->setval(" ");
                                                          Node* name = new Node(expNode, $3);
                                                          name->setval("<NewExpression>--> NEW <SimpleType> <MultiArrays>\n");
                                                          $$ = new Node(name);
                                                          }
                | NEW SimpleType MultiBrackets            {
                                                          Node* expNode = new Node($1, $2);
-                                                         expNode->setval(" ");
                                                          Node* name = new Node(expNode, $3);
                                                          name->setval("<NewExpression>--> NEW <SimpleType> <MultiBrackets>\n");
                                                          $$ = new Node(name);
                                                          }
                | NEW SimpleType MultiArrays MultiBrackets {
                                                          Node* expNode = new Node($1, $2);
-                                                         expNode->setval(" ");
                                                          Node* expNode2 = new Node(expNode, $3);
-                                                         expNode2->setval("");
                                                          Node* name = new Node(expNode2, $4);
                                                          name->setval("<NewExpression>--> NEW <SimpleType> <MultiArrays> <MultiBrackets>\n");
                                                          $$ = new Node(name);
