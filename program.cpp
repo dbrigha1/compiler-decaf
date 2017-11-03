@@ -81,7 +81,10 @@ int main()
 	  counter++;
 	}
 	cout << endl;
-	tree->print(&cout);
+	if(tree != 0)
+	  tree->print(&cout);
+	else
+	  cerr << "Parse tree could not be build.." << endl;
 	cout << endl;
       return 0;
 }                    

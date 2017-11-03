@@ -1,7 +1,7 @@
-            class List {
+            clas List {
                 ListNode head;
                 void show(ListNode list) {
-                        count = 2 + 1 * 3;
-                        count = 2 * 1 + 3;
-                    }
+                       read(
+                   } 
+
                 }

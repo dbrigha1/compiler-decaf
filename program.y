@@ -111,7 +111,7 @@ void yyerror(const char *);
 %left<ttype> PLUS MINUS COMPARE_OR
 %left<ttype> TIMES DIV MOD COMPARE_AND
 %precedence NEG POS NOTTY    
-
+%expect 1
 %% /* The grammar follows.  */
 
 Program: ClassDeclaration              {
@@ -129,6 +129,19 @@ ClassDeclaration:   CLASS IDENTIFIER ClassBody     {
                                                    name->setval("<ClassDeclaration>--> CLASS IDENTIFIER <ClassBody>\n");
                                                    $$ = new Node(name);
                                                    }     
+       |  error ClassBody          {
+                                                 yyerrok; yyclearin; 
+              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 Node* details = new nodeDetails(nodeLine, 0);
+                                                 Node* message = new Node;
+                                                 message->setval("ERROR <Class Declaration error> ");
+                                                 Node* nodeErrorMessage = new Node(message, details);
+                                                 
+                                                 nodeVec.push_back(nodeErrorMessage);
+                                                 Node* name = new Node($2);
+                                                 name->setval("<ClassDeclaration>--> error <ClassBody>\n");
+                                                 $$ = new Node(name);
+                                                }
 ;
 ClassBody: LBRACE RBRACE                                                    {
 	                                                                    Node* name = new Node($1,$2);
@@ -253,6 +266,19 @@ ConstructorDeclaration: IDENTIFIER LPAREN ParameterList RPAREN Block        {
                                                                             name->setval("<ConstructorDeclaration>--> IDENTIFIER LPAREN RPAREN <Block>\n");
                                                                             $$ = new Node(name);
                                                                             }
+       | IDENTIFIER error Block           {
+                                                 yyerrok; yyclearin; 
+              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 Node* details = new nodeDetails(nodeLine, 0);
+                                                 Node* message = new Node;
+                                                 message->setval("ERROR <Constructor Declaration error> ");
+                                                 Node* nodeErrorMessage = new Node(message, details);
+                                                 
+                                                 nodeVec.push_back(nodeErrorMessage);
+                                                 Node* name = new Node($1, $3);
+                                                 name->setval("<ConstructorDeclaration>--> IDENTIFIER error <Block>\n");
+                                                 $$ = new Node(name);
+                                                }
                       ;
 MethodDeclaration: ResultType IDENTIFIER LPAREN ParameterList RPAREN Block  {
                                                                             Node* temp = new Node($1, $2);
@@ -325,6 +351,19 @@ MethodDeclaration: ResultType IDENTIFIER LPAREN ParameterList RPAREN Block  {
                                                    name->setval("<MethodDeclaration>--> IDENTIFIER <MultiBrackets> IDENTIFIER LPAREN <ParameterList> RPAREN <Block>\n");
                                                                             $$ = new Node(name);
                                                                             }
+       | ResultType error Block           {
+                                                 yyerrok; yyclearin; 
+              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 Node* details = new nodeDetails(nodeLine, 0);
+                                                 Node* message = new Node;
+                                                 message->setval("ERROR <Method Declaration error> ");
+                                                 Node* nodeErrorMessage = new Node(message, details);
+                                                 
+                                                 nodeVec.push_back(nodeErrorMessage);
+                                                 Node* name = new Node($1, $3);
+                                                 name->setval("<ConstructorDeclaration>--> ResultType error <Block>\n");
+                                                 $$ = new Node(name);
+                                                }
                  ;
 ResultType: /*Type              {
                           Node* name = new Node($1);
@@ -348,6 +387,19 @@ ParameterList: Parameter {
                                                                          name->setval("<ParameterList>--> <ParameterList> COMMA <Parameter>\n");
                                                                          $$ = new Node(name);
                                                                         }
+       | ParameterList error Parameter           {
+                                                 yyerrok; yyclearin; 
+              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 Node* details = new nodeDetails(nodeLine, 0);
+                                                 Node* message = new Node;
+                                                 message->setval("ERROR <missing comma> ");
+                                                 Node* nodeErrorMessage = new Node(message, details);
+                                                 
+                                                 nodeVec.push_back(nodeErrorMessage);
+                                                 Node* name = new Node($1, $3);
+                                                 name->setval("<ParameterList>--> <ParameterList> error <Parameter>\n");
+                                                 $$ = new Node(name);
+                                                }
              ;
 Parameter: Type IDENTIFIER                                              {
 	                                                                 Node* name = new Node($1, $2);
@@ -394,6 +446,20 @@ Block: LBRACE RBRACE                                                    {
                                                                          name->setval("<Block>--> LBRACE <MultiLocalVarDec> <MultiStatement> RBRACE\n");
                                                                          $$ = new Node(name);
                                                                         }
+
+       | LBRACE error RBRACE                     {
+                                                 yyerrok; yyclearin; 
+              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 Node* details = new nodeDetails(nodeLine, 0);
+                                                 Node* message = new Node;
+                                                 message->setval("ERROR <Block> ");
+                                                 Node* nodeErrorMessage = new Node(message, details);
+                                                 
+                                                 nodeVec.push_back(nodeErrorMessage);
+                                                 Node* name = new Node($1, $3);
+                                                 name->setval("<ConstructorDeclaration>--> LBRACE error RBRACE\n");
+                                                 $$ = new Node(name);
+                                                }
      ;
 MultiLocalVarDec: LocalVarDeclaration                 {
                                                        Node* name = new Node($1);
@@ -431,13 +497,26 @@ LocalVarDeclaration: Type IDENTIFIER SEMI       {
                                                             name->setval("<LocalVarDeclaration>--> IDENTIFIER IDENTIFIER SEMI\n");
                                                             $$ = new Node(name);	
                                                             }
-                | IDENTIFIER MultiBrackets IDENTIFIER SEMI {
+               | IDENTIFIER MultiBrackets IDENTIFIER SEMI {
                                                             Node* temp = new Node($1, $2); 
                                                             Node* temp2 = new Node(temp, $3);
                                                             Node* name = new Node(temp2, $4);
                                                             name->setval("<LocalVarDeclaration>-->IDENTIFIER <MultiBrackets> IDENTIFIER SEMI\n");
                                                             $$ = new Node(name);	
                                                             }
+               | error SEMI                     {
+                                                 yyerrok; yyclearin; 
+              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 Node* details = new nodeDetails(nodeLine, 0);
+                                                 Node* message = new Node;
+                                                 message->setval("ERROR <Variable Declaration error> ");
+                                                 Node* nodeErrorMessage = new Node(message, details);
+                                                 
+                                                 nodeVec.push_back(nodeErrorMessage);
+                                                 Node* name = new Node($2);
+                                                 name->setval("<ConstructorDeclaration>--> error SEMI\n");
+                                                 $$ = new Node(name);
+                                                }
 ;
 Statement: SEMI                              {
                           Node* name = new Node($1);
@@ -450,6 +529,19 @@ Statement: SEMI                              {
                                              name->setval("<Statement>--> <Name> EQUALS <exp>\n");
                                              $$ = new Node(name);
                                              }
+       | Name error exp                     {
+                                                 yyerrok; yyclearin; 
+              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 Node* details = new nodeDetails(nodeLine, 0);
+                                                 Node* message = new Node;
+                                                 message->setval("ERROR <missing EQUALS sign> ");
+                                                 Node* nodeErrorMessage = new Node(message, details);
+                                                 
+                                                 nodeVec.push_back(nodeErrorMessage);
+                                                 Node* name = new Node($1, $3);
+                                                 name->setval("<Statement>--> <Name> error <exp>\n");
+                                                 $$ = new Node(name);
+                                                }
          | Name LPAREN Arglist RPAREN SEMI   {
                               Node* temp = new Node($1, $2);
                               Node* temp2 = new Node(temp, $3);
@@ -458,6 +550,19 @@ Statement: SEMI                              {
                               name->setval("<Statement>--> <Name> LPAREN <Arglist> RPAREN SEMI\n");
                               $$ = new Node(name);
                                              }
+       | Name error SEMI                     {
+                                                 yyerrok; yyclearin; 
+              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 Node* details = new nodeDetails(nodeLine, 0);
+                                                 Node* message = new Node;
+                                                 message->setval("ERROR <Arglist error> ");
+                                                 Node* nodeErrorMessage = new Node(message, details);
+                                                 
+                                                 nodeVec.push_back(nodeErrorMessage);
+                                                 Node* name = new Node($1, $3);
+                                                 name->setval("<Statement>--> <Name> error SEMI\n");
+                                                 $$ = new Node(name);
+                                                }
          | Name LPAREN RPAREN SEMI           {
                               Node* temp = new Node($1, $2);
                               Node* temp2 = new Node(temp, $3);
