@@ -84,6 +84,7 @@ void yyerror(const char *);
 %type<ttype> ClassBody
 %type<ttype> ConstructorDeclaration
 %type<ttype> MethodDeclaration
+%type<ttype> MultiClassDec
 %type<ttype> MultiVarDec 
 %type<ttype> MultiConstructorDec 
 %type<ttype> MultiMethodDec
@@ -114,7 +115,7 @@ void yyerror(const char *);
 %expect 1
 %% /* The grammar follows.  */
 
-Program: ClassDeclaration              {
+Program: MultiClassDec              {
                                        //  $1->setval(" <ClassDeclaration>\n");
                                          Node* temp = new Node($1,0);
                                          temp->setval("<Program> --> <ClassDeclaration>\n");
@@ -122,6 +123,20 @@ Program: ClassDeclaration              {
                                        
                                        }
 ;
+MultiClassDec: ClassDeclaration                                             {
+	                                                                     //$1->setval(" <VarDeclaration>\n");
+                                                                             Node* name = new Node($1);
+                                                                             name->setval("<MultiClassDec>--><ClassDeclaration>\n");
+                                                                             $$ = new Node(name);
+                                                                            }
+           | MultiClassDec ClassDeclaration                                 {
+                                                                             //$1->setval(" <MultiClassDec>\n"); 
+                                                                             //$2->setval(" <VarDeclaration>\n");
+                                                                             Node* name = new Node($1, $2);
+                                                                             name->setval("<MultiClassDec>--><MultiClassDec> <ClassDeclaration>\n");
+                                                                             $$ = new Node(name);
+                                                                            }
+           ;
 ClassDeclaration:   CLASS IDENTIFIER ClassBody     {
 		                                  // $3->setval(" <ClassBody>\n");
 		                                   Node* temp = new Node($1, $2);
@@ -129,12 +144,12 @@ ClassDeclaration:   CLASS IDENTIFIER ClassBody     {
                                                    name->setval("<ClassDeclaration>--> CLASS IDENTIFIER <ClassBody>\n");
                                                    $$ = new Node(name);
                                                    }     
-       |  error ClassBody          {
-                                                 yyerrok; yyclearin; 
+       | error ClassBody          {
+                                                 yyerrok; yyclearin;  
               					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
-                                                 message->setval("ERROR <Class Declaration error> ");
+                                                 message->setval("ERROR <ClassDeclaration error> end of ClassBody at ");
                                                  Node* nodeErrorMessage = new Node(message, details);
                                                  
                                                  nodeVec.push_back(nodeErrorMessage);

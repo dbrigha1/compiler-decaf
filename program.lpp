@@ -93,8 +93,8 @@ UNKNOWN     .
 "read" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return READ;}
 "null" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return NLL;}
 
-{SPACE}       {column++;} 
-{TAB}         {column++;}
+{SPACE}       {column+=yyleng;} 
+{TAB}         {column+=yyleng;}
 {INTEGER}     {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return INTEGER;}
 {FLOAT}       {column+=yyleng; return FLOAT;}
 {SCIENTIFIC}  {column+=yyleng; return SCIENTIFIC;}
