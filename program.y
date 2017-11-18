@@ -464,7 +464,7 @@ Block: LBRACE RBRACE                                                    {
 
        | LBRACE error RBRACE                     {
                                                  yyerrok; yyclearin; 
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("ERROR <Block> ");
