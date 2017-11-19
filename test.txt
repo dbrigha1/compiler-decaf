@@ -1,7 +1,7 @@
 /*dylan Brigham
 this is a comment*/
  class ListNode {
-                int data;
+                in data
                 ListNode next;
                 void setData(int x) {
                     data = x;

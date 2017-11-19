@@ -8,9 +8,8 @@ class SymbolTable;
 
 struct Scope
 {
-  int  _dataType;
-  string _kind;
-  SymbolTable* _ptrToParent;
+  SymbolTable* _child;
+  string _dataInfo[5]= {"-1","-1","-1","-1","-1"};
 };
 
 #endif
