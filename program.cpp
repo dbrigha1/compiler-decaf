@@ -10,6 +10,8 @@ HMK03
 #include<iostream>
 //#include "program.h"
 #include "node.hpp"
+#include "scope.h"
+#include "symbolTable.cpp"
 #include "program.tab.h"
 #include <iomanip>
 #include <vector>

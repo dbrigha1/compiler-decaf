@@ -14,6 +14,8 @@
 #include <iostream>
 #include <FlexLexer.h>
 #include "node.hpp"
+#include "scope.h"
+#include "symbolTable.h"
 #include <vector>
 //using namespace std;
 using std::cerr;

@@ -6,13 +6,13 @@ LEX=flex
 LEXXX=flex++
 LFLAGS=--warn
 
-all: program.tab.c program.tab.h program.cpp program.h program_lex.cpp node.hpp
+all: program.tab.c program.tab.h program.cpp scope.h program_lex.cpp node.hpp
 	$(CXX) $(CXXFLAGS) program_lex.cpp program.tab.c program.cpp -o program
 
 program.tab.c: program.y node.hpp
 	$(YACC) $(YFLAGS) program.y
 
-program_lex.cpp: program.lpp program.h
+program_lex.cpp: program.lpp
 	$(LEXXX) $(LFLAGS) program.lpp
 
 clean:
