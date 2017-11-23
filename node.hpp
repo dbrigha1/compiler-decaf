@@ -188,13 +188,22 @@ class Node
       
     }*/
 
-    void getParseTree(SymbolTable*& table, vector<string>& collection, string& previous, string& hold, string& type, int& counter, string& arglist, bool& trigger)
+    void getParseTree(SymbolTable*& table, vector<string>& collection, string& previous, string& hold, string& type, int& counter, string& arglist, bool& trigger, string& name)
     {
         
       if(sval != "")
       {
-        cout << sval << endl;
+        /*
          if(previous == "varType@")
+         {
+          Scope* check =  table->lookup(sval);
+          if(check == 0)
+          {
+              cout << "ERROR <Out of Scope>" << endl;
+          }
+         }
+         */
+         if(previous == "VarDec_Type@")
          {
           Scope* check =  table->lookup(sval);
           if(check == 0)
@@ -213,11 +222,18 @@ class Node
           }
         if(previous == "param@")
         {
-          if(collection[3] != "@")
-            collection[3] = collection[3] + "X" + sval;
+          if(collection[4] != "@")   //changed all 3s to 4s
+            collection[4] = collection[4] + "X" + sval;
           else
-            collection[3] = sval;
-        }
+            collection[4] = sval;
+        }/*
+        if(previous == "paramName@")
+        {
+          if(collection[4] != "@")   //changed all 3s to 4s
+            collection[4] = collection[4] + "X" + sval;
+          else
+            collection[4] = sval;
+        }*/
         if(previous == "kind@")
         {
           collection[2] = sval;
@@ -236,7 +252,7 @@ class Node
           for(unsigned int i = 0; i < collection.size(); i++)
           {
             if(hold != "" && i == 3)
-              info->_dataInfo[i] = hold + "<-" + collection[i];
+              info->_dataInfo[i] = hold + "<-";  //removed collection[i]
             else
               info->_dataInfo[i] = collection[i];
             collection[i] = "@";
@@ -263,10 +279,10 @@ class Node
           Scope* info = new Scope;
           for(unsigned int i = 0; i < collection.size(); i++)
           {
-            if(hold != "" && i == 3 && collection[i] != "@")
-              info->_dataInfo[i] = hold + " <- " + collection[i];
-            else if(hold != "" && i == 3 && collection[i] == "@")
-              info->_dataInfo[i] = hold + " <- " + "void"; 
+            if(hold != "" && i == 3 && collection[i+1] != "@")
+              info->_dataInfo[i] = hold + " <- "; //removed collection[i]
+            else if(hold != "" && i == 3 && collection[i+1] == "@")
+              info->_dataInfo[i] = hold + " <- " + "void";    
             else
               info->_dataInfo[i] = collection[i];
             collection[i] = "@";
@@ -280,27 +296,30 @@ class Node
             counter++;
           }  
           table->insert(info->_dataInfo[0], info);
-          
+          type = "void"; 
           table = child;
         }
-        type = this->checkParseTree(sval, table, previous, type, arglist, trigger);
+        type = this->checkParseTree(sval, table, previous, type, arglist, trigger, name);
         previous = sval;
       }
-        if(left) left->getParseTree(table, collection, previous, hold, type, counter, arglist, trigger);
-        if(right) right->getParseTree(table, collection, previous, hold, type, counter, arglist, trigger); 
+        if(left) left->getParseTree(table, collection, previous, hold, type, counter, arglist, trigger, name);
+        if(right) right->getParseTree(table, collection, previous, hold, type, counter, arglist, trigger, name); 
       return;
       
     }
-    string checkParseTree(string curr, SymbolTable* table, string previous, string type, string& arglist, bool& trigger)
+    string checkParseTree(string curr, SymbolTable* table, string previous, string type, string& arglist, bool& trigger, string& name)
     {
        if(curr != "")
        {
        //  cout << curr << endl;
         // cout << curr << endl;
-         if(previous == "startArgList")
+         if(previous == "startArgList@")
          {
            trigger = true;
-           cout << "trigger is true" << endl;
+         }
+         if(curr == "methodName@")
+         {
+           name = previous;
          }
          if(curr == "=")
          {
@@ -315,8 +334,6 @@ class Node
          }
          if(curr == "argType@" && trigger)
          {
-           cout << "arg" << endl;
-           cout << previous << "prev" << endl;
              Scope* typeCheck = table->lookup(previous);
              if(typeCheck != 0)
              {
@@ -325,7 +342,7 @@ class Node
                else
                  arglist = arglist + "X" + typeCheck->_dataInfo[1];
              }
-             cout << arglist << endl;
+           //  cout << arglist << endl;
 
          }
          if(previous == "varType@" && type == "void" && !trigger)
@@ -334,6 +351,7 @@ class Node
              if(typeCheck != 0)
              {
                type = typeCheck->_dataInfo[1];
+               previous = "done";
              }
 
          }
@@ -341,17 +359,15 @@ class Node
          {
                type = "int";
          }
-         cout << trigger << endl;
          if((previous == "varType@" || previous == "intType@") && type != "void" && (!trigger))
          {
-           cout << trigger << "trigger" << endl;
            if(previous == "intType@")
            {
              if("int" != type)
                cout << "ERROR <'" << curr << "' invalid data type>" << endl;
            }
            else
-           { 
+           {
              Scope* typeCheck = table->lookup(curr);
              if(typeCheck != 0)
              {
@@ -362,6 +378,32 @@ class Node
          }
          if(curr == ";")
          {
+           if(previous == "voidReturnType@")
+           {
+             string symbol;
+             string resultType;
+             SymbolTable* currentLocation = table;
+             SymbolTable* parentLocation = table->_parent;
+             for(auto it = parentLocation->_table.begin(); it != parentLocation->_table.end(); it++)
+             {
+               if((it->second)->_child == currentLocation)
+               {
+                 symbol = it->second->_dataInfo[0];
+        //         resultType = it->second->_dataInfo[1];
+                 break;
+               }
+             }
+             Scope* typeCheck = table->lookup(symbol);
+         //   cout << typeCheck->_dataInfo[1] << endl;
+             if(typeCheck != 0)
+             {
+               if(typeCheck->_dataInfo[1] != "void")
+          //       if(resultType != type)
+                   cout << "ERROR <'" << typeCheck->_dataInfo[0] << "' invalid return type>" << endl;
+             }
+
+
+           }
            if(previous == "returnType@")
            {
              string symbol;
@@ -378,7 +420,6 @@ class Node
                }
              }
              Scope* typeCheck = table->lookup(symbol);
-
              if(typeCheck != 0)
              {
                if(typeCheck->_dataInfo[1] != type)
@@ -387,6 +428,41 @@ class Node
              }
 
            }
+           if(trigger)
+           {
+             /*
+             string symbol;
+             SymbolTable* currentLocation = table;
+             SymbolTable* parentLocation = table->_parent;
+             for(auto it = parentLocation->_table.begin(); it != parentLocation->_table.end(); it++)
+             {
+               if((it->second)->_child == currentLocation)
+               {
+                 symbol = it->second->_dataInfo[0];
+        //         resultType = it->second->_dataInfo[1];
+                 break;
+               }
+             }
+             cout << "check : " << symbol << endl;
+             Scope* typeCheck = table->lookup(symbol);
+
+             if(typeCheck != 0)
+             {
+               if(typeCheck->_dataInfo[4] != arglist)
+                   cout << "ERROR <'" << typeCheck->_dataInfo[4] << "' invalid arguments>" << endl;
+             }
+*/
+      //       cout << name << endl;
+             Scope* typeCheck = table->lookup(name);
+
+             if(typeCheck != 0)
+             {
+               if(typeCheck->_dataInfo[4] != arglist)
+                   cout << "ERROR <'" << typeCheck->_dataInfo[4] << "' invalid arguments>" << endl;
+             }
+
+           }
+           name = "";
            arglist = "";
            type = "void";
            trigger = false;

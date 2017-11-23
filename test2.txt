@@ -1,12 +1,13 @@
 /*dylan Brigham
 this is a comment*/
- class ListNode {
-                
-                 int method(int top, def bottom)
-                  {
-                  int x;
-                  def e;
-                  x = method(x,e);
-                  return x;
-                  }
+            
+        class List {
+                ListNode head;
+                def y;
+                void show(ListNode list) {
+                    ListNode cursor;
+                    int count;
+                    count = y;
+                    }
                 }
+

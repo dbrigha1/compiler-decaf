@@ -44,7 +44,9 @@ void SymbolTable::dump(string indent)
            for(int i = 0; i < 5 ; i++)
            {
                if(data->_dataInfo[i] != "@")
+               {
                  cout <<data -> _dataInfo[i]<< " ";
+               }
            }
            cout << endl;
            if(data->_child != 0)

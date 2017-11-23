@@ -33,6 +33,7 @@ vector<Node*> nodeVec;
   {
     int unique = 1;
     string hold = "";
+    string name = "";
     string arglist = "";
     string type = "void";
     bool trigger= false;
@@ -59,7 +60,7 @@ vector<Node*> nodeVec;
     }
     if(tree != 0)
     {
-     tree->getParseTree(table, collection, begin, hold, type, unique, arglist, trigger);
+     tree->getParseTree(table, collection, begin, hold, type, unique, arglist, trigger, name);
      // tree->print(&cout);
      cout << endl;
     }

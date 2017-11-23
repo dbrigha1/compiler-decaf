@@ -490,27 +490,33 @@ ParameterList: Parameter {
                                                 }
              ;
 Parameter: Type IDENTIFIER                                              {
+                                                                         Node* paramName = new Node($2);
+                                                                         paramName -> setval("paramName@");
                                                                          Node* param = new Node($1);
                                                                          param->setval("param@");
-                                                                         Node* name = new Node(param, $2);
+                                                                         Node* name = new Node(param, paramName);
                                                                          name->setval("");
                                                                          $$ = new Node(name);
                                                                         }
                | IDENTIFIER IDENTIFIER               {
                                                           //  $$ = new nodeVarDec($1,$2);
                                                           //  $$->setval(" ");
+                                                                         Node* paramName = new Node($2);
+                                                                         paramName -> setval("paramName@");
                                                                          Node* param = new Node($1);
                                                                          param->setval("param@");
-                                                            Node* name = new Node(param, $2); 
+                                                            Node* name = new Node(param, paramName); 
                                                             name->setval("");
                                                             $$ = new Node(name);	
                                                             }
                | IDENTIFIER MultiBrackets IDENTIFIER               {
                                                           //  $$ = new nodeVarDec($1,$2);
                                                           //  $$->setval(" ");
+                                                                         Node* paramName = new Node($2);
+                                                                         paramName -> setval("paramName@");
                                                                          Node* param = new Node($1);
                                                                          param->setval("param@");
-                                                            Node* temp = new Node(param, $2); 
+                                                            Node* temp = new Node(param, paramName); 
                                                             Node* name = new Node(temp, $3);
                                                             name->setval("");
                                                             $$ = new Node(name);	
@@ -667,7 +673,7 @@ Statement: SEMI                              {
                                                 }
          | Name LPAREN Arglist RPAREN SEMI   {
                               Node* trigger = new Node($3);
-                              trigger->setval("startArgList");
+                              trigger->setval("startArgList@");
                               Node* temp = new Node($1, $2);
                               Node* temp2 = new Node(temp, trigger);
                               Node* arg = new Node($4);
@@ -699,7 +705,7 @@ Statement: SEMI                              {
                                              }
          | PRINT LPAREN Arglist RPAREN SEMI  {
                               Node* trigger = new Node($3);
-                              trigger->setval("startArgList");
+                              trigger->setval("startArgList@");
                               Node* temp = new Node($1, $2);
                               Node* temp2 = new Node(temp, trigger);
                               Node* arg = new Node($4);
@@ -958,9 +964,15 @@ exp:  Name              {
                           $$ = new Node(name);
                         }
        | Name LPAREN Arglist RPAREN {
-                              Node* temp = new Node($1, $2);
-                              Node* temp2 = new Node(temp, $3);
-                              Node* name = new Node(temp2, $4);
+                              Node* trigger = new Node($3);
+                              trigger->setval("startArgList@");
+                              Node* methodName = new Node($2);
+                              methodName->setval("methodName@");
+                              Node* temp = new Node($1, methodName);
+                              Node* temp2 = new Node(temp, trigger);
+                              Node* arg = new Node($4);
+                              arg->setval("argType@");
+                              Node* name = new Node(temp2, arg);
                               name->setval("");
                               $$ = new Node(name);
                                     }
