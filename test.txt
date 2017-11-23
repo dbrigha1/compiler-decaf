@@ -1,17 +1,15 @@
-/*dylan Brigham
-this is a comment*/
- class ListNode {
-                in data
+class ListNode {
+                int data;
                 ListNode next;
                 void setData(int x) {
                     data = x;
-                }  //test
+                }
             }
             class List {
                 ListNode head;
                 void show(ListNode list) {
-                    L@stNode cursor;
-                    i@t count;
+                    ListNode cursor;
+                    int count;
                     count = 0;
                     cursor = list;
                     while ( cursor != null ) {
@@ -21,7 +19,6 @@ this is a comment*/
                     }
                 }
                 void main() {
-//testing
                     ListNode second;
                     ListNode third;
                     head = new ListNode();

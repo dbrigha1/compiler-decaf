@@ -26,7 +26,13 @@ int main()
   sLocal-> _dataInfo[0] = "void";
   sLocal-> _dataInfo[1] = "method_type";
   local->insert("new name", sLocal);
+  sLocal->_dataInfo[2] = "testing";
+  local->insert("new name2", sLocal);
+  sLocal->_child = 0;
+  Scope* test = local->lookup("name");
+  cout << test->_dataInfo[0] << endl;
+  cout << test-> _dataInfo[1] << endl;
 
-  global->dump();
+  global->dump("");
   return 0;
 }

@@ -21,6 +21,8 @@
 #define NODE_HPP
 #include<iostream>
 #include<string>
+#include<vector>
+#include "scope.h"
 
 using std::string;
 using std::endl;
@@ -105,6 +107,296 @@ class Node
       if(left) left->print(out);
       if(right) right->print(out);
       return;
+    }
+/*    void getParseTree(vector<string> &buffer)
+    {
+      if(sval != "")
+        buffer.push_back(sval);
+      if(left) left->getParseTree(buffer);
+      if(right) right->getParseTree(buffer);
+      return;
+    }
+    *//*
+    void getParseTree(SymbolTable*& table, vector<string>& collection, string& previous, string& hold)
+    {
+      if(sval == "{")
+      {
+        SymbolTable* child = new SymbolTable(table);
+        Scope* info = new Scope;
+        for(unsigned int i = 0; i < collection.size(); i++)
+        {
+          info->_dataInfo[i] = collection[i];
+        }
+        collection.clear();
+        info->_child = child;
+        table->insert(info->_dataInfo[2], info);
+        table = child;
+      }
+      if(sval == ")")
+      {
+        Scope* info = new Scope;
+        for(unsigned int i = 0; i < collection.size()-2; i++)
+        {
+          info->_dataInfo[i] = collection[i];
+        }
+        if(previous != "(")
+        {
+        if(hold != "")
+          info->_dataInfo[collection.size()-2] = hold + "X" + collection[collection.size()-2];
+        else
+          info->_dataInfo[collection.size()-2] = collection[collection.size()-2];
+        }
+        hold = "";
+        collection.clear();
+        table->insert(info->_dataInfo[2], info);
+        
+      }
+      if(sval == ",")
+      {
+        if(hold == "")
+          hold = collection[collection.size()-2];
+        else
+          hold = hold + "X" + collection[collection.size()-2];
+        for(int i = 0; i<2; i++)
+        {
+          collection.pop_back();
+        }
+      }
+      if(sval == ";")
+      {
+        Scope* info = new Scope;
+        for(unsigned int i = 0; i < collection.size(); i++)
+        {
+          info->_dataInfo[i] = collection[i];
+        }
+        collection.clear();
+        table->insert(info->_dataInfo[2], info);
+      }
+      if(sval == "}")
+      {
+        table = table->_parent;
+      }
+      if(sval != "[" && sval != "]" && sval != "," && sval != "(" && sval != ")" && sval!= ";" && sval != ""&& sval != "}" && sval != "{")
+      {
+        collection.push_back(sval);
+        previous = sval;
+          
+      }
+        if(left) left->getParseTree(table, collection, previous, hold);
+        if(right) right->getParseTree(table, collection, previous, hold); 
+      return;
+      
+    }*/
+
+    void getParseTree(SymbolTable*& table, vector<string>& collection, string& previous, string& hold, string& type, int& counter, string& arglist, bool& trigger)
+    {
+        
+      if(sval != "")
+      {
+        cout << sval << endl;
+         if(previous == "varType@")
+         {
+          Scope* check =  table->lookup(sval);
+          if(check == 0)
+          {
+              cout << "ERROR <Out of Scope>" << endl;
+          }
+         }
+        if(previous == "whileType@")
+        {
+          collection[0] = "While_Type";
+        }
+        if(previous == "resultType@")
+          {
+            collection[1] = sval;
+            hold = sval;
+          }
+        if(previous == "param@")
+        {
+          if(collection[3] != "@")
+            collection[3] = collection[3] + "X" + sval;
+          else
+            collection[3] = sval;
+        }
+        if(previous == "kind@")
+        {
+          collection[2] = sval;
+        }
+        if(previous == "type@")
+        {
+          collection[1] = sval;
+        }
+        if(previous == "ident@")
+        {
+          collection[0] = sval;
+        }
+        if(sval == ";")
+        {
+          Scope* info = new Scope;
+          for(unsigned int i = 0; i < collection.size(); i++)
+          {
+            if(hold != "" && i == 3)
+              info->_dataInfo[i] = hold + "<-" + collection[i];
+            else
+              info->_dataInfo[i] = collection[i];
+            collection[i] = "@";
+          }
+          hold = "";
+         // collection.clear();
+          if(info->_dataInfo[0] != "@")
+          {
+            
+            int result = table->insert(info->_dataInfo[0], info);
+            if(result == 0)
+            {
+              cout << "ERROR " << " <'" << info->_dataInfo[0] << "' " << "already declared in scope>" << endl;
+            }
+          }
+        }
+        if(sval == "}")
+        {
+          table = table->_parent;
+        }
+        if(sval == "{")
+        {
+          SymbolTable* child = new SymbolTable(table);
+          Scope* info = new Scope;
+          for(unsigned int i = 0; i < collection.size(); i++)
+          {
+            if(hold != "" && i == 3 && collection[i] != "@")
+              info->_dataInfo[i] = hold + " <- " + collection[i];
+            else if(hold != "" && i == 3 && collection[i] == "@")
+              info->_dataInfo[i] = hold + " <- " + "void"; 
+            else
+              info->_dataInfo[i] = collection[i];
+            collection[i] = "@";
+          } 
+          hold = "";
+         // collection.clear();
+          info->_child = child;
+          if(info->_dataInfo[0] == "While_Type")
+          {
+            info->_dataInfo[0] = "While_Type" + to_string(counter);
+            counter++;
+          }  
+          table->insert(info->_dataInfo[0], info);
+          
+          table = child;
+        }
+        type = this->checkParseTree(sval, table, previous, type, arglist, trigger);
+        previous = sval;
+      }
+        if(left) left->getParseTree(table, collection, previous, hold, type, counter, arglist, trigger);
+        if(right) right->getParseTree(table, collection, previous, hold, type, counter, arglist, trigger); 
+      return;
+      
+    }
+    string checkParseTree(string curr, SymbolTable* table, string previous, string type, string& arglist, bool& trigger)
+    {
+       if(curr != "")
+       {
+       //  cout << curr << endl;
+        // cout << curr << endl;
+         if(previous == "startArgList")
+         {
+           trigger = true;
+           cout << "trigger is true" << endl;
+         }
+         if(curr == "=")
+         {
+           if(previous == "numType@")
+             cout << "ERROR <Invalid left value>" << endl;
+           else
+           {
+             Scope* typeCheck = table->lookup(previous);
+             if(typeCheck != 0)
+               type = typeCheck->_dataInfo[1];
+           }
+         }
+         if(curr == "argType@" && trigger)
+         {
+           cout << "arg" << endl;
+           cout << previous << "prev" << endl;
+             Scope* typeCheck = table->lookup(previous);
+             if(typeCheck != 0)
+             {
+               if(arglist == "")
+                arglist = typeCheck->_dataInfo[1];
+               else
+                 arglist = arglist + "X" + typeCheck->_dataInfo[1];
+             }
+             cout << arglist << endl;
+
+         }
+         if(previous == "varType@" && type == "void" && !trigger)
+         {
+             Scope* typeCheck = table->lookup(curr);
+             if(typeCheck != 0)
+             {
+               type = typeCheck->_dataInfo[1];
+             }
+
+         }
+         if(previous == "intType@" && type == "void")
+         {
+               type = "int";
+         }
+         cout << trigger << endl;
+         if((previous == "varType@" || previous == "intType@") && type != "void" && (!trigger))
+         {
+           cout << trigger << "trigger" << endl;
+           if(previous == "intType@")
+           {
+             if("int" != type)
+               cout << "ERROR <'" << curr << "' invalid data type>" << endl;
+           }
+           else
+           { 
+             Scope* typeCheck = table->lookup(curr);
+             if(typeCheck != 0)
+             {
+               if(typeCheck->_dataInfo[1] != type)
+                 cout << "ERROR <'" << typeCheck->_dataInfo[0] << "' invalid data type>" << endl;
+             }
+           }
+         }
+         if(curr == ";")
+         {
+           if(previous == "returnType@")
+           {
+             string symbol;
+             string resultType;
+             SymbolTable* currentLocation = table;
+             SymbolTable* parentLocation = table->_parent;
+             for(auto it = parentLocation->_table.begin(); it != parentLocation->_table.end(); it++)
+             {
+               if((it->second)->_child == currentLocation)
+               {
+                 symbol = it->second->_dataInfo[0];
+        //         resultType = it->second->_dataInfo[1];
+                 break;
+               }
+             }
+             Scope* typeCheck = table->lookup(symbol);
+
+             if(typeCheck != 0)
+             {
+               if(typeCheck->_dataInfo[1] != type)
+          //       if(resultType != type)
+                   cout << "ERROR <'" << typeCheck->_dataInfo[0] << "' invalid return type>" << endl;
+             }
+
+           }
+           arglist = "";
+           type = "void";
+           trigger = false;
+         }
+         previous = curr;
+       } 
+      //  if(left) left->checkParseTree(table, previous, hold);
+      //  if(right) right->checkParseTree(table, previous, hold); 
+      return type;
+      
     }
   protected:
     int yyline;

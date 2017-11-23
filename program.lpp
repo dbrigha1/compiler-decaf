@@ -12,6 +12,7 @@ HMK03
 %{
 //#include "program.h"
 #include "node.hpp"
+#include "scope.h"
 #include "program.tab.h"
 #include <iostream>
 using std::cout;
@@ -55,50 +56,49 @@ UNKNOWN     .
 <ERROR_WORD>[^{IDENTIFIER}]         {BEGIN(INITIAL); yyless(0);}
 
 
-"+"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return PLUS;}
-"-"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return MINUS;}
-"!"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return NOT;}
-"==" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return COMPARE_EQUAL;}
-"!=" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return COMPARE_NOTEQUAL;}
-"<=" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return LESSOREQUAL;}
-">=" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return GREATEROREQUAL;}
-"<"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return LESSTHAN;}
-">"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return GREATERTHAN;}
-"||" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return COMPARE_OR;}
-"*"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return TIMES;}
-"/"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return DIV;}
-"%"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return MOD;}
-"&&" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return COMPARE_AND;}
-","  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return COMMA;}
-"class"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return CLASS;}
-"{"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return LBRACE;}
-"}"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return RBRACE;}
-"void"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return VOID;}
-"="  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return EQUALS;}
-"print"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return PRINT;}
-"["  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return LBR;}
-"]"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return RBR;}
-"("  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0);  return LPAREN;}
-")"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0);  return RPAREN;}
-"[]" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return BRACKETS;}
-";"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0);  return SEMI;}
-"."  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0);  return DOT;}
-"int"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return INT;}
-"this" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return THIS;}
-"if"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return IF;}
-"else"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return ELSE;}
-"while"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return WHILE;}
-"return"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return RETURN;}
-"new"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return NEW;}
-"read" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return READ;}
-"null" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return NLL;}
+"+"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("+"); return PLUS;}
+"-"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("-"); return MINUS;}
+"!"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("!"); return NOT;}
+"==" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("=="); return COMPARE_EQUAL;}
+"!=" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("!="); return COMPARE_NOTEQUAL;}
+"<=" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("<="); return LESSOREQUAL;}
+">=" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(">="); return GREATEROREQUAL;}
+"<"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("<"); return LESSTHAN;}
+">"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(">"); return GREATERTHAN;}
+"||" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("||"); return COMPARE_OR;}
+"*"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("*"); return TIMES;}
+"/"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("/"); return DIV;}
+"%"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("%"); return MOD;}
+"&&" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("&&"); return COMPARE_AND;}
+","  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(","); return COMMA;}
+"class"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("class"); return CLASS;}
+"{"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("{"); return LBRACE;}
+"}"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("}"); return RBRACE;}
+"void"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("void"); return VOID;}
+"="  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("="); return EQUALS;}
+"print"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("print"); return PRINT;}
+"["  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("["); return LBR;}
+"]"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("]"); return RBR;}
+"("  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("(");  return LPAREN;}
+")"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(")");  return RPAREN;}
+";"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(";");  return SEMI;}
+"."  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(".");  return DOT;}
+"int"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("int"); return INT;}
+"this" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("this"); return THIS;}
+"if"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("if"); return IF;}
+"else"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("else"); return ELSE;}
+"while"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("while"); return WHILE;}
+"return"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("return"); return RETURN;}
+"new"  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("new"); return NEW;}
+"read" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("read"); return READ;}
+"null" {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval("null"); return NLL;}
 
 {SPACE}       {column+=yyleng;} 
 {TAB}         {column+=yyleng;}
-{INTEGER}     {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return INTEGER;}
-{FLOAT}       {column+=yyleng; return FLOAT;}
-{SCIENTIFIC}  {column+=yyleng; return SCIENTIFIC;}
-{IDENTIFIER}  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(0); return IDENTIFIER;}
+{INTEGER}     {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(yytext); return INTEGER;}
+{FLOAT}       {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(yytext); return FLOAT;}
+{SCIENTIFIC}  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(yytext); return SCIENTIFIC;}
+{IDENTIFIER}  {column+=yyleng; yylval.ttype = new Node; yylval.ttype->setval(yytext); return IDENTIFIER;}
 {NEWLINE}     {column =0;}
 {UNKNOWN}     {BEGIN(ERROR); yyless(0);}
 %%

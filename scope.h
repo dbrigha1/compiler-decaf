@@ -9,7 +9,7 @@ class SymbolTable;
 struct Scope
 {
   SymbolTable* _child;
-  string _dataInfo[5]= {"-1","-1","-1","-1","-1"};
+  string _dataInfo[5]= {"@"};
 };
 
 #endif

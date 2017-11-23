@@ -14,7 +14,7 @@ class Scope;
 
 class SymbolTable
 {
-private:
+public:
         SymbolTable* _parent;
         unordered_map<string, Scope*> _table;
 public:
@@ -22,7 +22,7 @@ public:
        ~SymbolTable();
        int insert(string name, Scope* typeInfo);
        Scope* lookup(string symbol);
-       void dump();
+       void dump(string indent);
 
 };
 

@@ -9,7 +9,7 @@ LFLAGS=--warn
 all: program.tab.c program.tab.h program.cpp scope.h program_lex.cpp node.hpp
 	$(CXX) $(CXXFLAGS) program_lex.cpp program.tab.c program.cpp -o program
 
-program.tab.c: program.y node.hpp
+program.tab.c: program.y node.hpp scope.h
 	$(YACC) $(YFLAGS) program.y
 
 program_lex.cpp: program.lpp

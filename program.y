@@ -15,7 +15,6 @@
 #include <FlexLexer.h>
 #include "node.hpp"
 #include "scope.h"
-#include "symbolTable.h"
 #include <vector>
 //using namespace std;
 using std::cerr;
@@ -32,6 +31,7 @@ extern Node *tree;
 Node* errorTree;
 extern yyFlexLexer scanner;
 extern vector<Node*> nodeVec;
+extern SymbolTable* table;
 /* 
  * Need to do this define, an "acceptable" hack to interface
  * the C++ scanner with the C parser. 
@@ -47,6 +47,8 @@ void yyerror(const char *);
 
 %union {
   Node *ttype;
+  Scope *dataInfo;
+  SymbolTable *symbolTable;
 }
 
 //%token IFX
@@ -65,7 +67,6 @@ void yyerror(const char *);
 %token<ttype> WORD_ERROR
 %token<ttype> LBR
 %token<ttype> RBR
-%token<ttype> BRACKETS
 %token<ttype> IF
 %token<ttype> ELSE
 %token<ttype> WHILE
@@ -114,41 +115,48 @@ void yyerror(const char *);
 %left<ttype> PLUS MINUS COMPARE_OR
 %left<ttype> TIMES DIV MOD COMPARE_AND
 %precedence NEG POS NOTTY    
-%expect 1
+%expect 2
 %% /* The grammar follows.  */
 
 Program: MultiClassDec              {
                                        //  $1->setval(" <ClassDeclaration>\n");
                                          Node* temp = new Node($1,0);
-                                         temp->setval("<Program> --> <ClassDeclaration>\n");
+                                         temp->setval("");
                                          tree = temp;
                                        
                                        }
 ;
 MultiClassDec: ClassDeclaration                                             {
-	                                                                     //$1->setval(" <VarDeclaration>\n");
+                                                                             //$1->setval(" <VarDeclaration>\n");
                                                                              Node* name = new Node($1);
-                                                                             name->setval("<MultiClassDec>--><ClassDeclaration>\n");
+                                                                             name->setval("");
                                                                              $$ = new Node(name);
                                                                             }
            | MultiClassDec ClassDeclaration                                 {
                                                                              //$1->setval(" <MultiClassDec>\n"); 
                                                                              //$2->setval(" <VarDeclaration>\n");
                                                                              Node* name = new Node($1, $2);
-                                                                             name->setval("<MultiClassDec>--><MultiClassDec> <ClassDeclaration>\n");
+                                                                             name->setval("");
                                                                              $$ = new Node(name);
                                                                             }
            ;
-ClassDeclaration:   CLASS IDENTIFIER ClassBody     {
-		                                  // $3->setval(" <ClassBody>\n");
-		                                   Node* temp = new Node($1, $2);
+ClassDeclaration:   CLASS IDENTIFIER ClassBody
+                                                   {
+                                                   // $3->setval(" <ClassBody>\n");
+                                                   Node* ident = new Node($2);
+                                                   ident->setval("ident@");
+                                                   Node* type = new Node($1);
+                                                   type->setval("type@");
+                                                   Node* temp = new Node(type, ident);
                                                    Node* name = new Node(temp, $3);
-                                                   name->setval("<ClassDeclaration>--> CLASS IDENTIFIER <ClassBody>\n");
-                                                   $$ = new Node(name);
+                                                   name->setval("Class_Type");
+                                                   Node* kind = new Node(name);
+                                                   kind->setval("kind@");
+                                                   $$ = new Node(kind);
                                                    }     
        | error ClassBody          {
                                                  yyerrok; yyclearin;  
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("ERROR <ClassDeclaration error> end of ClassBody at ");
@@ -156,34 +164,34 @@ ClassDeclaration:   CLASS IDENTIFIER ClassBody     {
                                                  
                                                  nodeVec.push_back(nodeErrorMessage);
                                                  Node* name = new Node($2);
-                                                 name->setval("<ClassDeclaration>--> error <ClassBody>\n");
+                                                 name->setval("");
                                                  $$ = new Node(name);
                                                 }
 ;
 ClassBody: LBRACE RBRACE                                                    {
-	                                                                    Node* name = new Node($1,$2);
-                                                                            name->setval("<ClassBody>--> LBRACE RBRACE\n");
+                                                                            Node* name = new Node($1,$2);
+                                                                            name->setval("");
                                                                             $$= new Node(name);
                                                                             }
          | LBRACE MultiVarDec RBRACE                                        {
                                                                            //  $2->setval(" <MultiVarDec>\n");
                                                                              Node* temp = new Node($1, $2);
                                                                              Node* name = new Node(temp, $3);  
-                                                                             name->setval("<ClassBody>--> LBRACE <MultiVarDec> RBRACE\n");
+                                                                             name->setval("");
                                                                              $$= new Node(name);
                                                                             }
          | LBRACE MultiConstructorDec RBRACE                                {
                                                                             // $2->setval(" <MultiConstructorDec>\n");
                                                                              Node* temp = new Node($1, $2);
                                                                              Node* name = new Node(temp, $3);  
-                                                                             name->setval("<ClassBody>--> LBRACE <MultiConstructorDec> RBRACE\n");
+                                                                             name->setval("");
                                                                              $$= new Node(name);
                                                                             }
          | LBRACE MultiMethodDec RBRACE                                     {
                                                                           //   $2->setval(" <MultiMethodDec>\n");
                                                                              Node* temp = new Node($1, $2);
                                                                              Node* name = new Node(temp, $3);  
-                                                                             name->setval("<ClassBody>-->LBRACE <MultiMethodDec> RBRACE\n");
+                                                                             name->setval("");
                                                                              $$= new Node(name);
                                                                             }
          | LBRACE MultiVarDec MultiConstructorDec RBRACE                    {
@@ -192,7 +200,7 @@ ClassBody: LBRACE RBRACE                                                    {
                                                                              Node* temp = new Node($1, $2);
                                                                              Node* temp2 = new Node(temp, $3);
                                                                              Node* name = new Node (temp2, $4); 
-                                                                             name->setval("<ClassBody>-->LBRACE <MultiVarDec> <MultiConstructorDec> RBRACE\n");
+                                                                             name->setval("");
                                                                              $$= new Node(name);
                                                                             }
          | LBRACE MultiVarDec MultiMethodDec RBRACE                         {
@@ -201,7 +209,7 @@ ClassBody: LBRACE RBRACE                                                    {
                                                                              Node* temp = new Node($1, $2);
                                                                              Node* temp2 = new Node(temp, $3);
                                                                              Node* name = new Node (temp2, $4);
-                                                                             name->setval("<ClassBody>-->LBRACE <MultiVarDec> <MultiMethodDec> RBRACE\n");
+                                                                             name->setval("");
                                                                              $$ = new Node(name);
                                                                             }
          | LBRACE MultiConstructorDec MultiMethodDec RBRACE                 {
@@ -210,7 +218,7 @@ ClassBody: LBRACE RBRACE                                                    {
                                                                              Node* temp = new Node($1, $2);
                                                                              Node* temp2 = new Node(temp, $3);
                                                                              Node* name = new Node (temp2, $4); 
-                                                                             name->setval("<ClassBody>-->LBRACE <MultiConstructorDec> <MultiMethodDec> RBRACE\n");
+                                                                             name->setval("");
                                                                              $$= new Node(name);
 
                                                                             } 
@@ -222,164 +230,227 @@ ClassBody: LBRACE RBRACE                                                    {
                                                                              Node* temp2 = new Node(temp, $3);
                                                                              Node* temp3 = new Node (temp2, $4);
                                                                              Node* name = new Node(temp3, $5);
-                                                                             name->setval("<ClassBody>-->LBRACE <MultiVarDec> <MultiConstructorDec> <MultiMethodDec> RBRACE\n");
+                                                                             name->setval("");
                                                                              $$= new Node(name);
                                                                             }
          ;
 MultiVarDec: VarDeclaration                                                 {
-	                                                                     //$1->setval(" <VarDeclaration>\n");
+                                                                             //$1->setval(" <VarDeclaration>\n");
                                                                              Node* name = new Node($1);
-                                                                             name->setval("<MultiVarDec>--><VarDeclaration>\n");
+                                                                             name->setval("");
                                                                              $$ = new Node(name);
                                                                             }
            | MultiVarDec VarDeclaration                                     {
                                                                              //$1->setval(" <MultiVarDec>\n"); 
                                                                              //$2->setval(" <VarDeclaration>\n");
                                                                              Node* name = new Node($1, $2);
-                                                                             name->setval("<MultiVarDec>--><MultiVarDec> <VarDeclaration>\n");
+                                                                             name->setval("");
                                                                              $$ = new Node(name);
                                                                             }
            ;
 MultiConstructorDec: ConstructorDeclaration                                 {
-		                                                             //$1->setval(" <ConstructorDeclaration>\n");
+                                                                             //$1->setval(" <ConstructorDeclaration>\n");
                                                                              Node* name = new Node($1);
-                                                                             name->setval("<MultiConstructorDec>--><ConstructorDeclaration>\n");
+                                                                             name->setval("");
                                                                              $$ = new Node(name);
                                                                             }
                    | MultiConstructorDec ConstructorDeclaration             {
                                                                              //$1->setval(" <MultiConstructorDec>\n");
                                                                              //$2->setval(" <ConstructorDeclaration>\n");
                                                                              Node* name = new Node($1, $2);
-                                                                             name->setval("<MultiConstructorDec>--><MultiConstructorDec> <ConstructorDeclaration>\n");
+                                                                             name->setval("");
                                                                              $$ = new Node(name);
                                                                             }
                    ;
 MultiMethodDec: MethodDeclaration                                           {
-		                                                             //$1->setval(" <MethodDeclaration>\n");
+                                                                             //$1->setval(" <MethodDeclaration>\n");
                                                                              Node* name = new Node($1);
-                                                                             name->setval("<MultiMethodDec>--><MethodDeclaration>\n");
+                                                                             name->setval("");
                                                                              $$ = new Node(name);
                                                                             }
                       | MultiMethodDec MethodDeclaration                    {
                                                                              //$1->setval(" <MultiMethodDec>\n");
                                                                              //$2->setval(" <MethodDeclaration>\n");
                                                                              Node* name = new Node($1, $2);
-                                                                             name->setval("<MultiMethodDec>--><MultiMethodDec> <MethodDeclaration>\n");
+                                                                             name->setval("");
                                                                              $$ = new Node(name);
                                                                             }
                       ;
 ConstructorDeclaration: IDENTIFIER LPAREN ParameterList RPAREN Block        {
-                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* ident = new Node($1);
+                                                                            ident->setval("ident@");
+                                                                            Node* temp = new Node(ident, $2);
                                                                             Node* temp2 = new Node(temp, $3);
                                                                             Node* temp3 = new Node(temp2, $4);
+                                                                            temp3->setval("filler");
                                                                             Node* name = new Node(temp3, $5);
-                                                                            name->setval("<ConstructorDeclaration>--> IDENTIFIER LPAREN <ParameterList> RPAREN <Block>\n");
-                                                                            $$ = new Node(name);
+                                                                            name->setval("Constructor_Type");
+                                                                            Node* kind = new Node(name);
+                                                                            kind->setval("kind@");
+                                                                            $$ = new Node(kind);
                                                                             }
                       | IDENTIFIER LPAREN RPAREN Block                      {
-                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* ident = new Node($1);
+                                                                            ident->setval("ident@");
+                                                                            Node* temp = new Node(ident, $2);
                                                                             Node* temp2 = new Node(temp, $3);
                                                                             Node* name = new Node(temp2, $4);
-                                                                            name->setval("<ConstructorDeclaration>--> IDENTIFIER LPAREN RPAREN <Block>\n");
-                                                                            $$ = new Node(name);
+                                                                            name->setval("Constructor_Type");
+                                                                            Node* kind = new Node(name);
+                                                                            kind->setval("kind@");
+                                                                            $$ = new Node(kind);
                                                                             }
        | IDENTIFIER error Block           {
                                                  yyerrok; yyclearin; 
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("ERROR <Constructor Declaration error> ");
                                                  Node* nodeErrorMessage = new Node(message, details);
                                                  
                                                  nodeVec.push_back(nodeErrorMessage);
-                                                 Node* name = new Node($1, $3);
-                                                 name->setval("<ConstructorDeclaration>--> IDENTIFIER error <Block>\n");
+                                                 Node* ident = new Node($1);
+                                                 ident->setval("ident@");
+                                                 Node* name = new Node(ident, $3);
+                                                 name->setval("");
                                                  $$ = new Node(name);
                                                 }
                       ;
 MethodDeclaration: ResultType IDENTIFIER LPAREN ParameterList RPAREN Block  {
-                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* ident = new Node($2);
+                                                                            ident->setval("ident@");
+                                                                            Node* type = new Node($1);
+                                                                            type->setval("resultType@");
+                                                                            Node* temp = new Node(type, ident);
                                                                             Node* temp2 = new Node(temp, $3);
                                                                             Node* temp3 = new Node(temp2, $4);
                                                                             Node* temp4 = new Node(temp3, $5);
                                                                             Node* name = new Node(temp4, $6);
-                                                                            name->setval("<MethodDeclaration>--> <ResultType> IDENTIFIER LPAREN <ParameterList> RPAREN <Block>\n");
-                                                                            $$ = new Node(name);
+                                                                            name->setval("Method_Type");
+                                                                            Node* kind = new Node(name);
+                                                                            kind->setval("kind@");
+                                                                            $$ = new Node(kind);
                                                                             }
                  | ResultType IDENTIFIER LPAREN RPAREN Block                {
-                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* ident = new Node($2);
+                                                                            ident->setval("ident@");
+                                                                            Node* type = new Node($1);
+                                                                            type->setval("resultType@");
+                                                                            Node* temp = new Node(type, ident);
                                                                             Node* temp2 = new Node(temp, $3);
                                                                             Node* temp3 = new Node(temp2, $4);
                                                                             Node* name = new Node(temp3, $5);
-                                                                            name->setval("<MethodDeclaration>--> <ResultType> IDENTIFIER LPAREN RPAREN <Block>\n");
-                                                                            $$ = new Node(name);
+                                                                            name->setval("Method_Type");
+                                                                            Node* kind = new Node(name);
+                                                                            kind->setval("kind@");
+                                                                            $$ = new Node(kind);
                                                                             }
                  | Type IDENTIFIER LPAREN RPAREN Block                {
-                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* ident = new Node($2);
+                                                                            ident->setval("ident@");
+                                                                            Node* type = new Node($1);
+                                                                            type->setval("resultType@");
+                                                                            Node* temp = new Node(type, ident);
                                                                             Node* temp2 = new Node(temp, $3);
                                                                             Node* temp3 = new Node(temp2, $4);
                                                                             Node* name = new Node(temp3, $5);
-                                                                            name->setval("<MethodDeclaration>--> <ResultType> IDENTIFIER LPAREN RPAREN <Block>\n");
-                                                                            $$ = new Node(name);
+                                                                            name->setval("Method_Type");
+                                                                            Node* kind = new Node(name);
+                                                                            kind->setval("kind@");
+                                                                            $$ = new Node(kind);
                                                                             }
                  | Type IDENTIFIER LPAREN ParameterList RPAREN Block       {
-                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* ident = new Node($2);
+                                                                            ident->setval("ident@");
+                                                                            Node* type = new Node($1);
+                                                                            type->setval("resultType@");
+                                                                            Node* temp = new Node(type, ident);
                                                                             Node* temp2 = new Node(temp, $3);
                                                                             Node* temp3 = new Node(temp2, $4);
                                                                             Node* temp4 = new Node(temp3, $5);
                                                                             Node* name = new Node(temp4, $6);
-                                                                            name->setval("<MethodDeclaration>--> <ResultType> IDENTIFIER LPAREN RPAREN <Block>\n");
-                                                                            $$ = new Node(name);
+                                                                            name->setval("Method_Type");
+                                                                            Node* kind = new Node(name);
+                                                                            kind->setval("kind@");
+                                                                            $$ = new Node(kind);
                                                                             }
                  | IDENTIFIER IDENTIFIER LPAREN RPAREN Block                {
-                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* ident = new Node($2);
+                                                                            ident->setval("ident@");
+                                                                            Node* type = new Node($1);
+                                                                            type->setval("resultType@");
+                                                                            Node* temp = new Node(type, ident);
                                                                             Node* temp2 = new Node(temp, $3);
                                                                             Node* temp3 = new Node(temp2, $4);
                                                                             Node* name = new Node(temp3, $5);
-                                                                            name->setval("<MethodDeclaration>--> IDENTIFIER IDENTIFIER LPAREN RPAREN <Block>\n");
-                                                                            $$ = new Node(name);
+                                                                            name->setval("Method_Type");
+                                                                            Node* kind = new Node(name);
+                                                                            kind->setval("kind@");
+                                                                            $$ = new Node(kind);
                                                                             }
                  | IDENTIFIER IDENTIFIER LPAREN ParameterList RPAREN Block                {
-                                                                            Node* temp = new Node($1, $2);
+                                                                            Node* ident = new Node($2);
+                                                                            ident->setval("ident@");
+                                                                            Node* type = new Node($1);
+                                                                            type->setval("resultType@");
+                                                                            Node* temp = new Node(type, ident);
                                                                             Node* temp2 = new Node(temp, $3);
                                                                             Node* temp3 = new Node(temp2, $4);
                                                                             Node* temp4 = new Node(temp3, $5);
                                                                             Node* name = new Node(temp4, $6);
-                                                                            name->setval("<MethodDeclaration>--> IDENTIFIER IDENTIFIER LPAREN RPAREN <Block>\n");
-                                                                            $$ = new Node(name);
+                                                                            name->setval("Method_Type");
+                                                                            Node* kind = new Node(name);
+                                                                            kind->setval("kind@");
+                                                                            $$ = new Node(kind);
                                                                             }
                  | IDENTIFIER MultiBrackets IDENTIFIER LPAREN RPAREN Block                {
-                                                                            Node* temp = new Node($1, $2);
-                                                                            Node* temp2 = new Node(temp, $3);
+                                                                            Node* ident = new Node($3);
+                                                                            ident->setval("ident@");
+                                                                            Node* type = new Node($1);
+                                                                            type->setval("resultType@");
+                                                                            Node* temp = new Node(type, $2);
+                                                                            Node* temp2 = new Node(temp, ident);
                                                                             Node* temp3 = new Node(temp2, $4);
                                                                             Node* temp4 = new Node(temp3, $5);
                                                                             Node* name = new Node(temp4, $6);
-                                                                            name->setval("<MethodDeclaration>--> IDENTIFIER <MultiBrackets> IDENTIFIER LPAREN RPAREN <Block>\n");
-                                                                            $$ = new Node(name);
+                                                                            name->setval("Method_Type");
+                                                                            Node* kind = new Node(name);
+                                                                            kind->setval("kind@");
+                                                                            $$ = new Node(kind);
                                                                                           }
                  | IDENTIFIER MultiBrackets IDENTIFIER LPAREN ParameterList RPAREN Block 
                                                                            {
-                                                   Node* temp = new Node($1, $2);
-                                                   Node* temp2 = new Node(temp, $3);
+                                                   Node* ident = new Node($3);
+                                                   ident->setval("ident@");
+                                                   Node* type = new Node($1);
+                                                   type->setval("resultType@");
+                                                   Node* temp = new Node(type, $2);
+                                                   Node* temp2 = new Node(temp, ident);
                                                    Node* temp3 = new Node(temp2, $4);
                                                    Node* temp4 = new Node(temp3, $5);
                                                    Node* temp5 = new Node(temp4, $6);
                                                    Node* name = new Node(temp5, $7);
-                                                   name->setval("<MethodDeclaration>--> IDENTIFIER <MultiBrackets> IDENTIFIER LPAREN <ParameterList> RPAREN <Block>\n");
-                                                                            $$ = new Node(name);
+                                                   name->setval("Method_Type");
+                                                                            Node* kind = new Node(name);
+                                                                            kind->setval("kind@");
+                                                                            $$ = new Node(kind);
                                                                             }
        | ResultType error Block           {
                                                  yyerrok; yyclearin; 
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("ERROR <Method Declaration error> ");
                                                  Node* nodeErrorMessage = new Node(message, details);
                                                  
                                                  nodeVec.push_back(nodeErrorMessage);
-                                                 Node* name = new Node($1, $3);
-                                                 name->setval("<ConstructorDeclaration>--> ResultType error <Block>\n");
-                                                 $$ = new Node(name);
+                                                 Node* type = new Node($1);
+                                                 type->setval("resultType@");
+                                                 Node* name = new Node(type, $3);
+                                                 name->setval("");
+                                                                            Node* kind = new Node(name);
+                                                                            kind->setval("kind@");
+                                                                            $$ = new Node(kind);
                                                 }
                  ;
 ResultType: /*Type              {
@@ -389,24 +460,24 @@ ResultType: /*Type              {
                               }
           | */VOID              {
                           Node* name = new Node($1);
-                          name->setval("<ResultType>--> VOID\n");
+                          name->setval("");
                           $$ = new Node(name);
                               }
           ;
 ParameterList: Parameter {
                           Node* name = new Node($1);
-                          name->setval("<ParameterList>--> <Parameter>\n");
+                          name->setval("");
                           $$ = new Node(name);
                          }
              | ParameterList COMMA Parameter                            {
                                                                          Node* temp = new Node($1, $2);
                                                                          Node* name = new Node(temp, $3);                                                                         
-                                                                         name->setval("<ParameterList>--> <ParameterList> COMMA <Parameter>\n");
+                                                                         name->setval("");
                                                                          $$ = new Node(name);
                                                                         }
        | ParameterList error Parameter           {
                                                  yyerrok; yyclearin; 
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("ERROR <missing comma> ");
@@ -414,53 +485,59 @@ ParameterList: Parameter {
                                                  
                                                  nodeVec.push_back(nodeErrorMessage);
                                                  Node* name = new Node($1, $3);
-                                                 name->setval("<ParameterList>--> <ParameterList> error <Parameter>\n");
+                                                 name->setval("");
                                                  $$ = new Node(name);
                                                 }
              ;
 Parameter: Type IDENTIFIER                                              {
-	                                                                 Node* name = new Node($1, $2);
-                                                                         name->setval("<Parameter>--> <Type> IDENTIFIER\n");
+                                                                         Node* param = new Node($1);
+                                                                         param->setval("param@");
+                                                                         Node* name = new Node(param, $2);
+                                                                         name->setval("");
                                                                          $$ = new Node(name);
                                                                         }
                | IDENTIFIER IDENTIFIER               {
                                                           //  $$ = new nodeVarDec($1,$2);
                                                           //  $$->setval(" ");
-                                                            Node* name = new Node($1, $2); 
-                                                            name->setval("<Parameter>--> IDENTIFIER IDENTIFIER\n");
+                                                                         Node* param = new Node($1);
+                                                                         param->setval("param@");
+                                                            Node* name = new Node(param, $2); 
+                                                            name->setval("");
                                                             $$ = new Node(name);	
                                                             }
                | IDENTIFIER MultiBrackets IDENTIFIER               {
                                                           //  $$ = new nodeVarDec($1,$2);
                                                           //  $$->setval(" ");
-                                                            Node* temp = new Node($1, $2); 
+                                                                         Node* param = new Node($1);
+                                                                         param->setval("param@");
+                                                            Node* temp = new Node(param, $2); 
                                                             Node* name = new Node(temp, $3);
-                                                            name->setval("<Parameter>--> IDENTIFIER <MultiBrackets> IDENTIFIER\n");
+                                                            name->setval("");
                                                             $$ = new Node(name);	
                                                             }
          ;
 Block: LBRACE RBRACE                                                    {
                                                                          Node* name = new Node($1, $2);
-                                                                         name->setval("<Block>--> LBRACE RBRACE\n");
+                                                                         name->setval("");
                                                                          $$ = new Node(name);
                                                                         }
      | LBRACE MultiLocalVarDec RBRACE                                    {
                                                                          Node* temp = new Node($1, $2);
                                                                          Node* name = new Node(temp, $3);  
-                                                                         name->setval("<Block>--> LBRACE <MultiLocalVarDec> RBRACE\n");
+                                                                         name->setval("");
                                                                          $$ = new Node(name);
                                                                         }
      | LBRACE MultiStatement RBRACE                                     {
                                                                          Node* temp = new Node($1, $2);
                                                                          Node* name = new Node(temp, $3);  
-                                                                         name->setval("<Block>--> LBRACE <MultiStatement> RBRACE\n");
+                                                                         name->setval("");
                                                                          $$ = new Node(name);
                                                                         }
      | LBRACE MultiLocalVarDec MultiStatement RBRACE                    {
                                                                          Node* temp = new Node($1, $2);
                                                                          Node* temp2 = new Node(temp, $3);
                                                                          Node* name = new Node(temp2, $4);  
-                                                                         name->setval("<Block>--> LBRACE <MultiLocalVarDec> <MultiStatement> RBRACE\n");
+                                                                         name->setval("");
                                                                          $$ = new Node(name);
                                                                         }
 
@@ -474,56 +551,84 @@ Block: LBRACE RBRACE                                                    {
                                                  
                                                  nodeVec.push_back(nodeErrorMessage);
                                                  Node* name = new Node($1, $3);
-                                                 name->setval("<ConstructorDeclaration>--> LBRACE error RBRACE\n");
+                                                 name->setval("");
                                                  $$ = new Node(name);
                                                 }
      ;
-MultiLocalVarDec: LocalVarDeclaration                 {
-                                                       Node* name = new Node($1);
-                                                       name->setval("<MultiLocalVarDec>--> <LocalVarDeclaration>\n");
-                                                       $$ = new Node(name);
-                                                       }
+
+MultiLocalVarDec: LocalVarDeclaration                                           {
+                                                                                Node* name = new Node($1);
+                                                                                name->setval("");
+                                                                                $$ = new Node(name);
+                                                                                }
                 | MultiLocalVarDec LocalVarDeclaration                          {
                                                                                 Node* name = new Node($1, $2);
-                                                                                name->setval("<MultiLocalVarDec>--> <MultiLocalVarDec> <LocalVarDeclaration>\n");
+                                                                                name->setval("");
                                                                                 $$ = new Node(name);
                                                                                 }
                 ;
+
 MultiStatement: Statement                                               {
                           Node* name = new Node($1);
-                          name->setval("<MultiStatement>--> <Statement>\n");
+                          name->setval("");
                           $$ = new Node(name);
-	      }
+                                                                        }
               | MultiStatement Statement                                {
                                                                                 Node* name = new Node($1, $2);
-                                                                                name->setval("<MultiStatement>--> <MultiStatement> <Statement>\n");
+                                                                                name->setval("");
                                                                                 $$ = new Node(name);
                                                                         }
               ;
+          
 LocalVarDeclaration: Type IDENTIFIER SEMI       {
-		                                Node* temp = new Node($1, $2); 
+                                                Node* type = new Node($1);
+                                                type->setval("type@");
+                                                Node* ident = new Node($2);
+                                                ident->setval("ident@");
+                                                Node* temp = new Node(type, ident); 
                                                 Node* name = new Node(temp, $3);
-                                                name->setval("<LocalVarDeclaration>--> <Type> IDENTIFIER SEMI\n");
+                                                name->setval("VarDec_Type");
                                                 $$ = new Node(name);
                                                 }
+               | Type MultiBrackets IDENTIFIER SEMI        {
+                                                          //  $$ = new nodeVarDec($1,$2);
+                                                          //  $$->setval(" ");
+                                                Node* type = new Node($1);
+                                                type->setval("type@");
+                                                Node* ident = new Node($3);
+                                                ident->setval("ident@");
+                                                            Node* temp = new Node(type, $2); 
+                                                            Node* temp2 = new Node(temp, ident);
+                                                            Node* name = new Node(temp2, $4);
+                                                            name->setval("VarDecArray_Type");
+                                                            $$ = new Node(name);
+                                                            }
                | IDENTIFIER IDENTIFIER SEMI               {
                                                           //  $$ = new nodeVarDec($1,$2);
                                                           //  $$->setval(" ");
-                                                            Node* temp = new Node($1, $2); 
+                                                Node* type = new Node($1);
+                                                type->setval("type@");
+                                                Node* ident = new Node($2);
+                                                ident->setval("ident@");
+                                                            Node* temp = new Node(type, ident); 
                                                             Node* name = new Node(temp, $3);
-                                                            name->setval("<LocalVarDeclaration>--> IDENTIFIER IDENTIFIER SEMI\n");
+                                                            name->setval("VarDec_Type");
                                                             $$ = new Node(name);	
                                                             }
                | IDENTIFIER MultiBrackets IDENTIFIER SEMI {
-                                                            Node* temp = new Node($1, $2); 
-                                                            Node* temp2 = new Node(temp, $3);
+                                                Node* type = new Node($1);
+                                                type->setval("type@");
+                                                Node* ident = new Node($3);
+                                                ident->setval("ident@");
+                                                            Node* temp = new Node(type, $2); 
+                                                            Node* temp2 = new Node(temp, ident);
                                                             Node* name = new Node(temp2, $4);
-                                                            name->setval("<LocalVarDeclaration>-->IDENTIFIER <MultiBrackets> IDENTIFIER SEMI\n");
+                                                            name->setval("VarDecArray_Type");
                                                             $$ = new Node(name);	
                                                             }
                | error SEMI                     {
                                                  yyerrok; yyclearin; 
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("ERROR <Variable Declaration error> ");
@@ -531,24 +636,25 @@ LocalVarDeclaration: Type IDENTIFIER SEMI       {
                                                  
                                                  nodeVec.push_back(nodeErrorMessage);
                                                  Node* name = new Node($2);
-                                                 name->setval("<ConstructorDeclaration>--> error SEMI\n");
+                                                 name->setval("");
                                                  $$ = new Node(name);
                                                 }
 ;
 Statement: SEMI                              {
                           Node* name = new Node($1);
-                          name->setval("<Statement>--> SEMI\n");
+                          name->setval("Statement_Type1");
                           $$ = new Node(name);
-	 }
-         | Name EQUALS exp                   {
+                                             }
+         | Name EQUALS exp SEMI              {
                                              Node* temp = new Node($1, $2); 
-                                             Node* name = new Node(temp, $3);
-                                             name->setval("<Statement>--> <Name> EQUALS <exp>\n");
+                                             Node* temp2 = new Node(temp, $3);
+                                             Node* name = new Node(temp2, $4);
+                                             name->setval("Statement_Type2");
                                              $$ = new Node(name);
                                              }
-       | Name error exp                     {
+       | Name error exp SEMI                 {
                                                  yyerrok; yyclearin; 
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("ERROR <missing EQUALS sign> ");
@@ -556,20 +662,24 @@ Statement: SEMI                              {
                                                  
                                                  nodeVec.push_back(nodeErrorMessage);
                                                  Node* name = new Node($1, $3);
-                                                 name->setval("<Statement>--> <Name> error <exp>\n");
+                                                 name->setval("Statement_Type2");
                                                  $$ = new Node(name);
                                                 }
          | Name LPAREN Arglist RPAREN SEMI   {
+                              Node* trigger = new Node($3);
+                              trigger->setval("startArgList");
                               Node* temp = new Node($1, $2);
-                              Node* temp2 = new Node(temp, $3);
-                              Node* temp3 = new Node(temp2, $4);
+                              Node* temp2 = new Node(temp, trigger);
+                              Node* arg = new Node($4);
+                              arg->setval("argType@");
+                              Node* temp3 = new Node(temp2, arg);
                               Node* name = new Node(temp3, $5);
-                              name->setval("<Statement>--> <Name> LPAREN <Arglist> RPAREN SEMI\n");
+                              name->setval("Statement_Type3");
                               $$ = new Node(name);
                                              }
        | Name error SEMI                     {
                                                  yyerrok; yyclearin; 
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("ERROR <Arglist error> ");
@@ -577,88 +687,123 @@ Statement: SEMI                              {
                                                  
                                                  nodeVec.push_back(nodeErrorMessage);
                                                  Node* name = new Node($1, $3);
-                                                 name->setval("<Statement>--> <Name> error SEMI\n");
+                                                 name->setval("Statement_Type3");
                                                  $$ = new Node(name);
                                                 }
          | Name LPAREN RPAREN SEMI           {
                               Node* temp = new Node($1, $2);
                               Node* temp2 = new Node(temp, $3);
                               Node* name = new Node(temp2, $4);
-                              name->setval("<Statement>--> <Name> LPAREN RPAREN SEMI\n");
+                              name->setval("Statement_Type3");
                               $$ = new Node(name);
                                              }
          | PRINT LPAREN Arglist RPAREN SEMI  {
+                              Node* trigger = new Node($3);
+                              trigger->setval("startArgList");
                               Node* temp = new Node($1, $2);
-                              Node* temp2 = new Node(temp, $3);
-                              Node* temp3 = new Node(temp2, $4);
+                              Node* temp2 = new Node(temp, trigger);
+                              Node* arg = new Node($4);
+                              arg->setval("argType@");
+                              Node* temp3 = new Node(temp2, arg);
                               Node* name = new Node(temp3, $5);
-                              name->setval("<Statement>--> PRINT LPAREN <Arglist> RPAREN SEMI\n");
+                              name->setval("Statement_Type4");
                               $$ = new Node(name);
                                              }
          | PRINT LPAREN RPAREN SEMI          {
                               Node* temp = new Node($1, $2);
                               Node* temp2 = new Node(temp, $3);
                               Node* name = new Node(temp2, $4);
-                              name->setval("<Statement>--> PRINT LPAREN RPAREN SEMI\n");
+                              name->setval("Statement_Type4");
                               $$ = new Node(name);
                                              }
          | ConditionalStatement              {
                           Node* name = new Node($1);
-                          name->setval("<Statement>--> <ConditionalStatement>\n");
+                          name->setval("Statement_Type5");
                           $$ = new Node(name);
                                              }
          | WHILE LPAREN exp RPAREN Statement {
-                              Node* temp = new Node($1, $2);
+                              Node* loop = new Node($1);
+                              loop->setval("whileType@");
+                              Node* temp = new Node(loop, $2);
                               Node* temp2 = new Node(temp, $3);
                               Node* temp3 = new Node(temp2, $4);
                               Node* name = new Node(temp3, $5);
-                              name->setval("<Statement>--> WHILE LPAREN <exp> RPAREN <Statement>\n");
+                              name->setval("Statement_Type6");
                               $$ = new Node(name);
                                              }
          | RETURN OptionalExpression SEMI    {
                               Node* temp = new Node($1, $2);
-                              Node* name = new Node(temp, $3);
-                              name->setval("<Statement>--> RETURN <OptionalExpression> SEMI\n");
+                              Node* returnType = new Node($3);
+                              returnType->setval("returnType@");
+                              Node* name = new Node(temp, returnType);
+                              name->setval("Statement_Type7");
                               $$ = new Node(name);
                                              }
          | RETURN SEMI                       {
-                          Node* name = new Node($1, $2);
-                          name->setval("<Statement>--> RETURN SEMI\n");
+                          Node* returnType = new Node($2);
+                          returnType->setval("voidReturnType@");
+                          Node* name = new Node($1, returnType);
+                          name->setval("Statement_Type8");
                           $$ = new Node(name);
                                              }
          | Block         {
                           Node* name = new Node($1);
-                          name->setval("<Statement>--> <Block>\n");
+                          name->setval("Statement_Type9");
                           $$ = new Node(name);
                          }
 ;
 VarDeclaration:   Type IDENTIFIER SEMI                    {
-	                                                  //  $1->setval(" <Type>\n");
-                                                            Node* temp = new Node($1, $2); 
+                                                            //  $1->setval(" <Type>\n");
+                                                            Node* ident = new Node($2);
+                                                            ident->setval("ident@");
+                                                            Node* type = new Node($1);
+                                                            type->setval("type@");
+                                                            Node* temp = new Node(type,ident); 
                                                             Node* name = new Node(temp, $3);
-                                                            name->setval("<VarDeclaration>--> <Type> IDENTIFIER SEMI\n");
-                                                            $$ = new Node(name);	
+                                                            name->setval("VarDec_Type");
+                                                            $$ = new Node(name);
+                                                            }
+               | Type MultiBrackets IDENTIFIER SEMI        {
+                                                          //  $$ = new nodeVarDec($1,$2);
+                                                          //  $$->setval(" ");
+                                                            Node* ident = new Node($3);
+                                                            ident->setval("ident@");
+                                                            Node* type = new Node($1);
+                                                            type->setval("type@");
+                                                            Node* temp = new Node(type, $2); 
+                                                            Node* temp2 = new Node(temp, ident);
+                                                            Node* name = new Node(temp2, $4);
+                                                            name->setval("VarDecArray_Type");
+                                                            $$ = new Node(name);
                                                             }
                | IDENTIFIER IDENTIFIER SEMI               {
                                                           //  $$ = new nodeVarDec($1,$2);
                                                           //  $$->setval(" ");
-                                                            Node* temp = new Node($1, $2); 
+                                                            Node* ident = new Node($2);
+                                                            ident->setval("ident@");
+                                                            Node* type = new Node($1);
+                                                            type->setval("type@");
+                                                            Node* temp = new Node(type, ident); 
                                                             Node* name = new Node(temp, $3);
-                                                            name->setval("<VarDeclaration>--> IDENTIFIER IDENTIFIER SEMI\n");
-                                                            $$ = new Node(name);	
+                                                            name->setval("VarDec_Type");
+                                                            $$ = new Node(name);
                                                             }
                 | IDENTIFIER MultiBrackets IDENTIFIER SEMI {
-                                                            Node* temp = new Node($1, $2); 
-                                                            Node* temp2 = new Node(temp, $3);
+                                                            Node* ident = new Node($3);
+                                                            ident->setval("ident@");
+                                                            Node* type = new Node($1);
+                                                            type->setval("type@");
+                                                            Node* temp = new Node(type, $2); 
+                                                            Node* temp2 = new Node(temp, ident);
                                                             Node* name = new Node(temp2, $4);
-                                                            name->setval("<VarDeclaration>-->IDENTIFIER <MultiBrackets> IDENTIFIER SEMI\n");
-                                                            $$ = new Node(name);	
+                                                            name->setval("VarDecArray_Type");
+                                                            $$ = new Node(name);
                                                             }
 /*
        | error SEMI                     {//if an error is read it will continue until
                                             //a newline character is recognized
                                                  yyerrok; yyclearin;
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("Variable Declaration error: ");
@@ -673,31 +818,32 @@ VarDeclaration:   Type IDENTIFIER SEMI                    {
                                        }*/
 ;
 
-MultiBrackets: BRACKETS               { 
-                          Node* name = new Node($1);
-                          name->setval("<MultiBrackets>--> BRACKETS\n");
+MultiBrackets: LBR RBR               { 
+                          Node* name = new Node($1, $2);
+                          name->setval("");
                           $$ = new Node(name);
-	                              }
-	     | MultiBrackets BRACKETS {
-                                       Node* name = new Node($1, $2);
-                                       name->setval("<MultiBrackets>--> <MultiBrackets> BRACKETS\n");
+                                      }
+             | MultiBrackets LBR RBR  {
+                                       Node* temp = new Node($1, $2);
+                                       Node* name = new Node(temp, $3);
+                                       name->setval("");
                                        $$ = new Node(name);
                                       }
 ;
 
-Type:   SimpleType 	{
-		         // $1->setval(" <SimpleType>\n");
+Type:   SimpleType      {
+                         // $1->setval(" <SimpleType>\n");
                           Node* name = new Node($1);
-                          name->setval("<Type>--><SimpleType>\n");
+                          name->setval("");
                           $$ = new Node(name);
-                        }
+                        }/*
        | Type LBR RBR    { 
                           //$1->setval(" <Type>\n");
                           Node* temp = new Node($1, $2);
                           Node* name = new Node(temp, $3);
-                          name->setval("<Type>--><Type> BRACKETS\n");
+                          name->setval("");
                           $$ = new Node(name); 
-                        }/* 
+                        }*//* 
        | error BRACKETS                     {
                                              yyerrok; yyclearin;
                                              Node* er  = new Node;
@@ -705,7 +851,7 @@ Type:   SimpleType 	{
                                              //if an error is read it will continue until
                                             //a newline character is recognized
                                                 
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
+                                                   nodeInfo* nodeLine = new nodeInfo(scanner.lineno());
                                                //  nodeInfo* nodeColumn = new nodeInfo(column);
                                           //       yyerror($1);
                                                  Node* details = new nodeDetails(nodeLine, 0);
@@ -724,41 +870,45 @@ Type:   SimpleType 	{
 ;
 SimpleType: INT          {
                           Node* name = new Node($1);
-                          name->setval("<SimpleType>--> INT\n");
+                          name->setval("");
                           $$ = new Node(name);
-	                 }
+                         }
 ;
-Name:   THIS 		{ 
+Name:   THIS            { 
                           Node* name = new Node($1);
-                          name->setval("<Name>--> THIS\n");
+                          name->setval("");
                           $$ = new Node(name);
                         }
        | IDENTIFIER    { 
-                          Node* name = new Node($1); 
-                          name->setval("<Name>--> IDENTIFIER\n");
+                          Node* varType = new Node($1);
+                          varType->setval("varType@");
+                          Node* name = new Node(varType); 
+                          name->setval("");
                           $$ = new Node(name);
                         }
        | Name DOT IDENTIFIER  { 
                           Node* name = new Node($1, $3);
-                          name->setval("<Name>--> <Name> DOT IDENTIFIER\n");
+                          name->setval("");
                           $$ = new Node(name);
                         }
        | Name LBR exp RBR   { 
                           Node* name = new Node($1, $3);
-                          name->setval("<Name>--> <Name> LBRACKET <exp> RBRACKET\n");
+                          name->setval("");
                           $$ = new Node(name);
                         }
 ;
 
 Arglist: exp              {
                           Node* name = new Node($1);
-                          name->setval("<Arglist>--> <exp>\n");
+                          name->setval("");
                           $$ = new Node(name);
                           }
        | Arglist COMMA exp                            {
-                                                       Node* temp = new Node($1, $2);
+                                                       Node* arg = new Node($2);
+                                                       arg->setval("argType@");
+                                                       Node* temp = new Node($1, arg);
                                                        Node* name = new Node(temp, $3);                                                                         
-                                                       name->setval("<Arglist>--> <Arglist> COMMA <exp>\n");
+                                                       name->setval("");
                                                        $$ = new Node(name);
                                                       }
        ;
@@ -767,10 +917,10 @@ ConditionalStatement: IF LPAREN exp RPAREN Statement {
                               Node* temp2 = new Node(temp, $3);
                               Node* temp3 = new Node(temp2, $4);
                               Node* name = new Node(temp3, $5);
-                              name->setval("<ConditionalStatement>--> IF LPAREN <exp> RPAREN <Statement>\n");
+                              name->setval("");
                               $$ = new Node(name);
                                                      }
-		    | IF LPAREN exp RPAREN Statement ELSE Statement 
+                     | IF LPAREN exp RPAREN Statement ELSE Statement 
                             {
                               Node* temp = new Node($1, $2);
                               Node* temp2 = new Node(temp, $3);
@@ -778,61 +928,65 @@ ConditionalStatement: IF LPAREN exp RPAREN Statement {
                               Node* temp4 = new Node(temp3, $5);
                               Node* temp5 = new Node(temp4, $6);
                               Node* name = new Node(temp5, $7);
-                              name->setval("<ConditionalStatement>--> IF LPAREN <exp> RPAREN <Statement> ELSE <Statement>\n");
+                              name->setval("");
                               $$ = new Node(name);
                              }
                     ;
 OptionalExpression: exp {
                           Node* name = new Node($1);
-                          name->setval("<OptionalExpression>--> <exp>\n");
-                          $$ = new Node(name);
-		        }
-		  ;
-exp:  Name 		{
-                          Node* name = new Node($1);
-                          name->setval("<exp>--> <Name>\n");
+                          name->setval("");
                           $$ = new Node(name);
                         }
-       | INTEGER 	{ 
+                  ;
+exp:  Name              {
                           Node* name = new Node($1);
-                          name->setval("<exp>--> INTEGER\n");
+                          name->setval("");
                           $$ = new Node(name);
                         }
-       | NLL     	{ 
+       | INTEGER        {
+                          Node* lval = new Node;
+                          lval->setval("numType@");
+                          Node* intType = new Node($1, lval);
+                          intType->setval("intType@"); 
+                          Node* name = new Node(intType);
+                          name->setval("");
+                          $$ = new Node(name);
+                        }
+       | NLL            { 
                           Node* name = new Node($1);
-                          name->setval("<exp>--> NULL\n");
+                          name->setval("");
                           $$ = new Node(name);
                         }
        | Name LPAREN Arglist RPAREN {
                               Node* temp = new Node($1, $2);
                               Node* temp2 = new Node(temp, $3);
                               Node* name = new Node(temp2, $4);
-                              name->setval("<exp>--> <Name> LPAREN <Arglist> RPAREN\n");
+                              name->setval("");
                               $$ = new Node(name);
                                     }
        | Name LPAREN RPAREN         {
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <Name> LPAREN RPAREN\n");
+                              name->setval("");
                               $$ = new Node(name);
                                     }
-       | READ LPAREN RPAREN  	{ 
+       | READ LPAREN RPAREN    { 
                           Node* temp = new Node($1, $2);
                           Node* name = new Node(temp, $3);
-                          name->setval("<exp>--> READ PARENTHESIS\n");
+                          name->setval("");
                           $$ = new Node(name);
                          // $1->setval("read()");
-                         // $$ = $1;	
+                         // $$ = $1;
                         }
-       | NewExpression 	{ 
+       | NewExpression  { 
                           Node* name = new Node($1);
-                          name->setval("<exp>--> <NewExpression>\n");
+                          name->setval("");
                           $$ = new Node(name);
-                         // $$ = $1;	
+                         // $$ = $1;
                         }
        | PLUS exp %prec POS    { 
                           Node* name = new Node($1, $2);
-                          name->setval("<exp>--> PLUS <exp>\n");
+                          name->setval("");
                           $$ = new Node(name);
                         //  Node* plus = new nodePlus($2, 0);
                         //  $$ = new Node($$, plus);
@@ -840,7 +994,7 @@ exp:  Name 		{
                         }
        | MINUS exp %prec NEG  { 
                           Node* name = new Node($1, $2);
-                          name->setval("<exp>--> MINUS <exp>\n");
+                          name->setval("");
                           $$ = new Node(name);
                          // Node* minus = new nodeMinus($2, 0);
                          // $$ = new Node($$, minus);
@@ -848,7 +1002,7 @@ exp:  Name 		{
                         }
        | NOT exp %prec NOTTY    {
                           Node* name = new Node($1, $2);
-                          name->setval("<exp>--> NOT <exp>\n");
+                          name->setval("");
                           $$ = new Node(name);
                          // Node* nt = new nodeNot($2, 0);
                         //  $$ = new Node($$, nt);
@@ -857,7 +1011,7 @@ exp:  Name 		{
        | exp COMPARE_EQUAL exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> COMPARE_EQUAL <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                      //   $$ = new Node($1, $3);
                      //   $$->setval("=="); 
@@ -865,7 +1019,7 @@ exp:  Name 		{
        | exp COMPARE_NOTEQUAL exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> COMPARE_NOTEQUAL <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                       //  $$ = new Node($1, $3);
                       //  $$->setval("!="); 
@@ -873,7 +1027,7 @@ exp:  Name 		{
        | exp LESSOREQUAL exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> LESS_OR_EQUAL <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                       //  $$ = new Node($1, $3);
                       //  $$->setval("<="); 
@@ -881,7 +1035,7 @@ exp:  Name 		{
        | exp GREATEROREQUAL exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> GREATER_OR_EQUAL <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                       //  $$ = new Node($1, $3);
                       //  $$->setval(">="); 
@@ -889,7 +1043,7 @@ exp:  Name 		{
        | exp LESSTHAN exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> LESS_THAN <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                         //$$ = new Node($1, $3);
                         //$$->setval("<"); 
@@ -897,7 +1051,7 @@ exp:  Name 		{
        | exp GREATERTHAN exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> GREATER_THAN <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                         //$$ = new Node($1, $3);
                         //$$->setval(">"); 
@@ -905,7 +1059,7 @@ exp:  Name 		{
        | exp PLUS exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> PLUS <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                        // $$ = new Node($1, $3);
                        // $$->setval("+");
@@ -913,7 +1067,7 @@ exp:  Name 		{
        | exp MINUS exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> <MINUS> <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                        // $$ = new Node($1, $3);
                        // $$->setval("-"); 
@@ -921,7 +1075,7 @@ exp:  Name 		{
        | exp COMPARE_OR exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> OR <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                        // $$ = new Node($1, $3);
                        // $$->setval("||"); 
@@ -929,7 +1083,7 @@ exp:  Name 		{
        | exp DIV exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> DIV <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                        // $$ = new Node($1, $3);
                        // $$->setval("/"); 
@@ -937,7 +1091,7 @@ exp:  Name 		{
        | exp TIMES exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> TIMES <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                        // $$ = new Node($1, $3);
                        // $$->setval("*"); 
@@ -945,7 +1099,7 @@ exp:  Name 		{
        | exp MOD exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> MOD <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                        // $$ = new Node($1, $3);
                        // $$->setval("%"); 
@@ -953,7 +1107,7 @@ exp:  Name 		{
        | exp COMPARE_AND exp     { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> <exp> AND <exp>\n");
+                              name->setval("");
                               $$ = new Node(name);
                        // $$ = new Node($1, $3);
                        // $$->setval("&&"); 
@@ -961,16 +1115,16 @@ exp:  Name 		{
        | LPAREN exp RPAREN    { 
                               Node* temp = new Node($1, $2);
                               Node* name = new Node(temp, $3);
-                              name->setval("<exp>--> LPAREN <exp> RPAREN\n");
+                              name->setval("");
                               $$ = new Node(name);
-                       //  $$ = new nodeParExp($2);	
+                       //  $$ = new nodeParExp($2);
                         }
       /* | LPAREN error                   {
                                                  yyerrok; yyclearin;
                                                //  Node* newLineNode = new Node;
                                                //  newLineNode->setval("\n"); 
                                                //  column = 1;
-              				     	 nodeInfo* nodeLine = new nodeInfo(scanner.lineno()-1);
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno()-1);
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("Missing right parenthesis: ");
@@ -986,7 +1140,7 @@ exp:  Name 		{
                                                  newLineNode->setval("\n"); 
                                                  $$= newLineNode;
                                                  column = 1;
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno()-1);
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno()-1);
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("Expression error: ");
@@ -1000,7 +1154,7 @@ NewExpression: NEW IDENTIFIER LPAREN RPAREN {
                               Node* temp = new Node($1, $2);
                               Node* temp2 = new Node(temp, $3);
                               Node* name = new Node(temp2, $4);
-                              name->setval("<NewExpression>--> NEW IDENTIFIER LPAREN RPAREN\n");
+                              name->setval("");
                               $$ = new Node(name);
                              }
              | NEW IDENTIFIER LPAREN Arglist RPAREN {
@@ -1008,32 +1162,32 @@ NewExpression: NEW IDENTIFIER LPAREN RPAREN {
                               Node* temp2 = new Node(temp, $3);
                               Node* temp3 = new Node(temp2, $4);
                               Node* name = new Node(temp3, $5);
-                              name->setval("<NewExpression>--> NEW IDENTIFIER LPAREN <Arglist> RPAREN\n");
+                              name->setval("");
                               $$ = new Node(name);
                              }
-	       | NEW SimpleType{ 
+             | NEW SimpleType{ 
                                     Node* name = new Node($1, $2);
-                                    name->setval("<NewExpression>--> NEW <SimpleType>");
-                                    $$ = new Node(name);	
+                                    name->setval("");
+                                    $$ = new Node(name);
                                     }
                | NEW SimpleType MultiArrays              {
                                                          
                                                          Node* expNode = new Node($1, $2);
                                                          Node* name = new Node(expNode, $3);
-                                                         name->setval("<NewExpression>--> NEW <SimpleType> <MultiArrays>\n");
+                                                         name->setval("");
                                                          $$ = new Node(name);
                                                          }
                | NEW SimpleType MultiBrackets            {
                                                          Node* expNode = new Node($1, $2);
                                                          Node* name = new Node(expNode, $3);
-                                                         name->setval("<NewExpression>--> NEW <SimpleType> <MultiBrackets>\n");
+                                                         name->setval("");
                                                          $$ = new Node(name);
                                                          }
                | NEW SimpleType MultiArrays MultiBrackets {
                                                          Node* expNode = new Node($1, $2);
                                                          Node* expNode2 = new Node(expNode, $3);
                                                          Node* name = new Node(expNode2, $4);
-                                                         name->setval("<NewExpression>--> NEW <SimpleType> <MultiArrays> <MultiBrackets>\n");
+                                                         name->setval("");
                                                          $$ = new Node(name);
                                                          }/*
        | NEW error NEWLINE                    {//if an error is read it will continue until
@@ -1043,7 +1197,7 @@ NewExpression: NEW IDENTIFIER LPAREN RPAREN {
                                                  newLineNode->setval("\n"); 
                                                  $$= newLineNode;
                                                  column = 1;
-              					 nodeInfo* nodeLine = new nodeInfo(scanner.lineno()-1);
+                                                 nodeInfo* nodeLine = new nodeInfo(scanner.lineno()-1);
                                                  Node* details = new nodeDetails(nodeLine, 0);
                                                  Node* message = new Node;
                                                  message->setval("New Expression error: ");
@@ -1054,17 +1208,17 @@ NewExpression: NEW IDENTIFIER LPAREN RPAREN {
                                        }*/
 ;
 MultiArrays: LBR exp RBR            {
-	                            Node* temp = new Node($1, $2);
-	                            Node* name = new Node(temp, $3);
-                                    name->setval("<MultiArrays>--> LBRACKET <exp> RBRACKET\n");
+                                    Node* temp = new Node($1, $2);
+                                    Node* name = new Node(temp, $3);
+                                    name->setval("");
                                     $$ = new Node(name);
                                     }
-	  | MultiArrays LBR exp RBR 
+           | MultiArrays LBR exp RBR 
                                     {
-	                            Node* temp = new Node($1, $2);
-	                            Node* temp2 = new Node(temp, $3);
+                                    Node* temp = new Node($1, $2);
+                                    Node* temp2 = new Node(temp, $3);
                                     Node* name = new Node(temp2, $4);
-                                    name->setval("<MultiArrays>--> <MultiArrays> LBRACKET <exp> RBRACKET\n");
+                                    name->setval("");
                                     $$ = new Node(name);
                                     }
 ; 
