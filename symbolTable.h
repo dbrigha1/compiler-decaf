@@ -1,5 +1,7 @@
 /*Dylan Brigham
   SymbolTable.h
+  Compilers
+  11/23/2017
 */
 #ifndef SYMBOL_TABLE_H
 #define SYMBOL_TABLE_H

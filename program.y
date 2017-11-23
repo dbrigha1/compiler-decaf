@@ -278,7 +278,7 @@ MultiMethodDec: MethodDeclaration                                           {
                       ;
 ConstructorDeclaration: IDENTIFIER LPAREN ParameterList RPAREN Block        {
                                                                             Node* ident = new Node($1);
-                                                                            ident->setval("ident@");
+                                                                            ident->setval("consIdent@");
                                                                             Node* temp = new Node(ident, $2);
                                                                             Node* temp2 = new Node(temp, $3);
                                                                             Node* temp3 = new Node(temp2, $4);
@@ -291,7 +291,7 @@ ConstructorDeclaration: IDENTIFIER LPAREN ParameterList RPAREN Block        {
                                                                             }
                       | IDENTIFIER LPAREN RPAREN Block                      {
                                                                             Node* ident = new Node($1);
-                                                                            ident->setval("ident@");
+                                                                            ident->setval("consIdent@");
                                                                             Node* temp = new Node(ident, $2);
                                                                             Node* temp2 = new Node(temp, $3);
                                                                             Node* name = new Node(temp2, $4);
@@ -310,7 +310,7 @@ ConstructorDeclaration: IDENTIFIER LPAREN ParameterList RPAREN Block        {
                                                  
                                                  nodeVec.push_back(nodeErrorMessage);
                                                  Node* ident = new Node($1);
-                                                 ident->setval("ident@");
+                                                 ident->setval("consIdent@");
                                                  Node* name = new Node(ident, $3);
                                                  name->setval("");
                                                  $$ = new Node(name);

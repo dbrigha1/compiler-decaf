@@ -246,6 +246,32 @@ class Node
         {
           collection[0] = sval;
         }
+        if(previous == "consIdent@")
+        {
+             string symbol;
+             string resultType;
+             SymbolTable* currentLocation = table;
+             SymbolTable* parentLocation = table->_parent;
+             for(auto it = parentLocation->_table.begin(); it != parentLocation->_table.end(); it++)
+             {
+               if((it->second)->_child == currentLocation)
+               {
+                 symbol = it->second->_dataInfo[0];
+        //         resultType = it->second->_dataInfo[1];
+                 break;
+               }
+             }
+             Scope* typeCheck = table->lookup(symbol);
+         //   cout << typeCheck->_dataInfo[1] << endl;
+             if(typeCheck != 0)
+             {
+               if(typeCheck->_dataInfo[0] != sval)
+          //       if(resultType != type)
+                   cout << "ERROR <'" << sval << "' invalid constructor>" << endl;
+             }
+
+          collection[0] = sval;
+        }
         if(sval == ";")
         {
           Scope* info = new Scope;
@@ -352,6 +378,10 @@ class Node
              {
                type = typeCheck->_dataInfo[1];
                previous = "done";
+             }
+             else
+             {
+               cout << "ERROR <'" << curr << "' declaration error>" << endl;
              }
 
          }

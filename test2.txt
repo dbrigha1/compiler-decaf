@@ -2,12 +2,12 @@
 this is a comment*/
             
         class List {
-                ListNode head;
-                def y;
-                void show(ListNode list) {
-                    ListNode cursor;
-                    int count;
-                    count = y;
-                    }
-                }
+                     int method(int j, int x)
+{
+int p;
+int m;
+int n;
+p = m + n;
+}
+                   }
 

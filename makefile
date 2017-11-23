@@ -7,7 +7,7 @@ LEXXX=flex++
 LFLAGS=--warn
 
 all: program.tab.c program.tab.h program.cpp scope.h program_lex.cpp node.hpp
-	$(CXX) $(CXXFLAGS) program_lex.cpp program.tab.c program.cpp -o program
+	$(CXX) $(CXXFLAGS) program_lex.cpp program.tab.c program.cpp -o program5
 
 program.tab.c: program.y node.hpp scope.h
 	$(YACC) $(YFLAGS) program.y

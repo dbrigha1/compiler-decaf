@@ -1,3 +1,8 @@
+/*Dylan Brigham
+ * Compilers
+ * Dr. Buckner
+ * 11/23/2017*/
+
 #ifndef SCOPE_H
 #define SCOPE_H
 

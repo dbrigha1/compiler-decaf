@@ -1,3 +1,8 @@
+/*Dylan Brigham
+ * Dr. Buckner
+ * Compilers
+ * 11/23/2017*/
+
 #include "symbolTable.h"
 #include "scope.h"
 using namespace std;
@@ -38,8 +43,8 @@ void SymbolTable::dump(string indent)
          
          for(auto it = _table.begin(); it != _table.end(); it++)
          {
-           cout << indent << it->first << " ";
-          // cout << indent;
+          // cout << indent << it->first << " ";
+           cout << indent;
            Scope* data = it->second;
            for(int i = 0; i < 5 ; i++)
            {
