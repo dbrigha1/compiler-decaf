@@ -30,6 +30,7 @@ using std::ostream;
 
 extern unsigned int column;
 extern yyFlexLexer scanner;
+extern int numMains;
 
 class Node
 {

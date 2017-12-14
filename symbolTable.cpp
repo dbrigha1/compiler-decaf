@@ -5,6 +5,7 @@
 
 #include "symbolTable.h"
 #include "scope.h"
+#include <iostream>
 using namespace std;
 
 
@@ -21,6 +22,19 @@ int SymbolTable::insert(string name, Scope* typeInfo)
        {
        //check first that is aleady declared in local scope return error if yes
        //else, return value indicating success
+         if(name == "main")
+         {
+           if(numMains > 0)
+           {
+             cout << "Error <main cannot be declared more than once>" << endl; 
+             return -3;
+           }
+           else
+             numMains = 1;
+           
+
+         }
+           
          return ( _table.insert({name, typeInfo}).second);
        }
 Scope* SymbolTable::lookup(string symbol)

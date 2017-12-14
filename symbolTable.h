@@ -13,6 +13,7 @@
 
 using namespace std;
 class Scope;
+extern int numMains;
 
 class SymbolTable
 {

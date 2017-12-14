@@ -24,6 +24,7 @@ using std::string;
 unsigned int column = 0;
 yyFlexLexer scanner;
 Node *tree;
+int numMains = 0;
 vector<Node*> nodeVec;
 //SymbolTable* table;
 //SymbolTable* generateSymbolTable(vector<string> buffer);
@@ -32,6 +33,7 @@ vector<Node*> nodeVec;
   int main()
   {
     int unique = 1;
+   // int numMains = 0;
     string hold = "";
     string name = "";
     string arglist = "";
